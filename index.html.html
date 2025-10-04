@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Voicing Finder</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Visual upgrade: modern, premium look with subtle motion, gradients and improved spacing */
+
+        :root{
+            --bg-outer: linear-gradient(180deg,#0f1720 0%, #161923 40%, #0b0f12 100%);
+            --panel-bg: rgba(255,255,255,0.04);
+            --glass: rgba(255,255,255,0.03);
+            --accent-1: #6EE7B7;
+            --accent-2: #38BDF8;
+            --accent-3: #9B7CFF;
+            --muted: #9aa4b2;
+            --card-bg: #0f1620;
+            --text-on-dark: #E6EEF6;
+            --note-white: #ffffff;
+            --note-shadow: rgba(12,18,24,0.35);
+            --danger: #ef4444;
+            --glass-border: rgba(255,255,255,0.06);
+            --glass-glow: 0 6px 30px rgba(60,120,255,0.05);
+            --transition: 220ms cubic-bezier(.2,.9,.2,1);
+        }
+
+        html,body{
+            min-height: 100%;
+            margin:0;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+            -webkit-font-smoothing:antialiased;
+            -moz-osx-font-smoothing:grayscale;
+            background-image: url('https://raw.githubusercontent.com/stryman2/voicingfinder/refs/heads/main/vintage%20guitar.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color:var(--text-on-dark);
+            display:flex;
+            align-items:flex-start;
+            justify-content:center;
+            padding-top: 10px;
+            padding-left: 28px;
+            padding-right: 28px;
+            padding-bottom: 28px;
+        }
+
+        .container{
+            width:100%;
+            max-width:1160px;
+            border-radius:18px;
+            padding:26px;
+            background: rgba(0, 0, 0, 0.8);
+            box-shadow: 0 10px 40px rgba(3,7,14,0.6), 0 1px 0 rgba(255,255,255,0.02) inset;
+            border: 1px solid rgba(255,255,255,0.03);
+            position:relative;
+            overflow:visible;
+        }
+
+        /* top-right theme toggle */
+        #theme-toggle{
+            position:absolute;
+            right:18px;
+            top:18px;
+            width:44px;
+            height:44px;
+            border-radius:12px;
+            background:linear-gradient(180deg,#111827,#0b1220);
+            display:grid;
+            place-items:center;
+            border:1px solid rgba(255,255,255,0.04);
+            cursor:pointer;
+            transition:transform var(--transition);
+        }
+        #theme-toggle:hover{ transform:translateY(-3px); }
+
+        /* header logo */
+        .logo-container{ display:flex; align-items:center; gap:2px; justify-content:center; margin-bottom:18px; }
+        .logo-title{ font-weight:450; font-size:28px; color:var(--text-on-dark); letter-spacing:0.0px; }
+        .logo-sub{ font-size:12px; color:var(--muted); margin-top:2px; }
+
+        /* Controls row */
+        .controls-row{
+            display:flex;
+            gap:18px;
+            align-items:center;
+            justify-content:center;
+            flex-wrap:wrap;
+            padding:12px;
+            margin-bottom:18px;
+            border-radius:12px;
+            background: linear-gradient(90deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
+            border:1px solid var(--glass-border);
+            box-shadow: var(--glass-glow);
+        }
+
+        .vl-panel{ display:flex; gap:14px; align-items:center; flex-wrap:wrap; justify-content:center; }
+        .vl-field{ display:flex; flex-direction:column; align-items:center; gap:8px; min-width:110px; }
+        .vl-field label{ font-size:12px; color:var(--muted); font-weight:700; }
+        .vl-field select, .vl-field input[type="number"]{
+            border-radius:10px;
+            border:0;
+            padding:10px 12px;
+            background:linear-gradient(180deg,#ffffff,#f3f5f7);
+            color:#1b2430;
+            font-weight:700;
+            letter-spacing:0.6px;
+            box-shadow: 0 6px 14px rgba(2,6,10,0.08);
+            min-width:110px;
+            text-align:center;
+        }
+
+        .vl-direction{ display:flex; gap:8px; align-items:center; }
+        .vl-btn{
+            width:40px;height:40px;border-radius:9px;border:0;
+            background:linear-gradient(180deg,#2b2f36,#1b1f24);
+            color:var(--text-on-dark);
+            display:inline-grid;place-items:center;
+            cursor:pointer;font-size:14px;font-weight:800;
+            transition:all var(--transition);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+        }
+        .vl-btn:hover{ transform:translateY(-3px); }
+        .vl-btn.active{
+            background: linear-gradient(90deg,var(--accent-1), var(--accent-2));
+            color:#06202b;
+            box-shadow: 0 10px 30px rgba(56,189,248,0.12), 0 4px 0 rgba(0,0,0,0.25);
+        }
+
+        /* Current Voicing - premium cards style */
+        .current-voicing{
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:16px;
+            margin:10px 0 18px 0;
+            flex-wrap:nowrap;
+        }
+
+        .note-square{
+            width:76px;height:76px;
+            min-width:76px;
+            border-radius:14px;
+            background:var(--note-white);
+            color:#0b1220;
+            font-weight:900;
+            font-size:28px;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            box-shadow: 0 12px 30px var(--note-shadow), 0 2px 0 rgba(0,0,0,0.12);
+            border: 1px solid rgba(6,10,16,0.06);
+            transition: transform var(--transition), box-shadow var(--transition);
+            outline:none;
+            text-align:center;
+        }
+        .note-square::placeholder{ color:#9aa4b2; font-weight:800; }
+
+        .note-square:focus{ transform:translateY(-6px) scale(1.02); box-shadow: 0 18px 40px rgba(2,6,18,0.35); }
+
+        .side-btn{
+            height:76px;
+            min-width:110px;
+            border-radius:14px;
+            border:0;
+            cursor:pointer;
+            font-weight:800;
+            font-size:15px;
+            color:#fff;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            letter-spacing:0.6px;
+            transition:all var(--transition);
+            box-shadow: 0 12px 30px rgba(2,6,18,0.45);
+        }
+        .side-btn.prev-btn{
+            background: linear-gradient(180deg,#3f8fb0,#165a78);
+        }
+        .side-btn.next-btn{
+            background: linear-gradient(180deg,#00b37a,#0e7b5e);
+        }
+        .side-btn:hover{ transform:translateY(-4px); filter:brightness(1.03); }
+
+        /* small helper: container for mobile repositioning */
+        .cv-nav{ display:none; gap:10px; }
+
+        /* Inputs + controls area */
+        .input-section{ display:flex; flex-wrap:wrap; gap:16px; justify-content:center; margin-bottom:18px; align-items:center; }
+
+        .button-container{ display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-bottom:18px; }
+        .button-container button{
+            height:52px; padding:0 18px; border-radius:12px; border:0; cursor:pointer;
+            font-weight:800; letter-spacing:0.4px; box-shadow: 0 10px 26px rgba(2,6,18,0.45);
+            transition:all var(--transition);
+        }
+        #find-voicing-strict{ background: linear-gradient(90deg,var(--accent-1), var(--accent-2)); color:#042427; }
+        #find-voicing-flexible{ background: linear-gradient(90deg,var(--accent-2), var(--accent-3)); color:#061222; }
+        #play-voicing-button{ background: linear-gradient(90deg,#ff9a8b,#ff6a88); }
+        #store-voicing-button{ background: linear-gradient(90deg,#8b7cff,#6b52f9); }
+
+        .button-container button:hover{ transform:translateY(-4px); filter:brightness(1.04); }
+
+        .output-section{ display:flex; flex-direction:column; align-items:center; gap:12px; margin-bottom:18px; }
+        /* allow the SVG to size itself based on number of frets; center it */
+        #fretboard-diagram{
+            width:auto;
+            height:180px;
+            max-width:100%;
+            display:block;
+            border-radius:12px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
+            border:1px solid rgba(255,255,255,0.02);
+            box-shadow: 0 12px 40px rgba(3,7,14,0.6);
+        }
+        .output-controls{ display:flex; gap:12px; align-items:center; justify-content:center; }
+
+        #option-number{ font-size:15px; font-weight:700; color:var(--muted); }
+
+        /* Saved voicings (more premium card) */
+        .saved-voicings-section{ margin-top:18px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.03); }
+        .saved-voicings-section h3{ margin:0 0 12px 0; font-size:16px; color:var(--text-on-dark); }
+
+        .saved-voicings-container{ display:flex; gap:14px; flex-wrap:wrap; align-items:flex-start; }
+        .saved-voicing-item{
+            width:200px;
+            border-radius:12px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+            padding:20px;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            box-shadow: 0 10px 30px rgba(2,6,18,0.5);
+            border:1px solid rgba(255,255,255,0.02);
+            transition: transform var(--transition), box-shadow var(--transition);
+        }
+        .saved-voicing-item:hover{ transform:translateY(-6px); box-shadow: 0 18px 48px rgba(2,6,18,0.6); }
+        .saved-voicing-label{
+            font-weight:800;
+            color:var(--accent-1);
+            margin-bottom:6px;
+            font-size:13px;
+            text-transform:uppercase;
+            letter-spacing:0.6px;
+        }
+        .saved-voicing-item svg{ width:200px; height:100px; margin-bottom:8px; display:block; }
+        .saved-remove-btn{ background:var(--danger); color:#fff; border:0; padding:6px 8px; border-radius:8px; cursor:pointer; font-weight:800; }
+         .empty-state {
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px;
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            height: 180px; /* Matches the fretboard height */
+            color: var(--muted);
+        }
+
+        .empty-state i {
+            font-size: 40px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            margin: 0 0 10px 0;
+            color: var(--text-on-dark);
+            font-weight: 700;
+        }
+        /* responsive adjustments */
+        @media (max-width: 880px){
+            .container{ padding:18px; }
+            .note-square{ width:64px; height:64px; min-width:64px; font-size:22px; border-radius:12px; }
+            .side-btn{ height:64px; min-width:96px; border-radius:12px; font-size:14px; }
+            .saved-voicing-item{ width:120px; }
+            #fretboard-diagram{ height:220px; }
+        }
+
+        @media (max-width: 768px){
+            /* --- Mobile layout tuned for ~390px (iPhone 12) --- */
+            html, body {
+                padding-left: 12px;
+                padding-right: 12px;
+                -webkit-text-size-adjust: 100%;
+            }
+
+            .container {
+                max-width: 390px; /* match iPhone 12 width */
+                width: 100%;
+                box-sizing: border-box;
+                padding: 14px;
+            }
+
+            /* current voicing stacks vertically and uses full width */
+            .current-voicing{
+                flex-direction:column;
+                gap:12px;
+                align-items:stretch;
+            }
+            .note-square{
+                width:100%;
+                height:56px;
+                min-width:unset;
+                font-size:18px;
+                border-radius:10px;
+                box-shadow: 0 8px 20px rgba(2,6,18,0.38);
+            }
+
+            /* place prev/next into cv-nav bar */
+            .cv-nav{ display:flex; justify-content:center; gap:10px; margin-top:6px; }
+
+            /* buttons stack and are full width to avoid overflow */
+            .button-container{
+                flex-direction:column;
+                gap:10px;
+                width:100%;
+            }
+            .button-container button{
+                width:100%;
+                height:48px;
+                font-size:14px;
+                padding:0 12px;
+            }
+
+            /* tighten controls */
+            .controls-row{ padding:10px; gap:10px; }
+            .vl-field{ min-width:88px; }
+
+            /* Fretboard sizing for mobile: slightly shorter and guaranteed to fit */
+            #fretboard-diagram{ height:160px; }
+
+            /* Saved voicings: single column, larger elements for readability */
+            .saved-voicings-container{
+                display:flex;
+                flex-direction:column;
+                gap:12px;
+                align-items:center;
+                width:100%;
+            }
+            .saved-voicing-item{
+                width:95%;
+                padding:16px;
+                display:flex;
+                flex-direction:column;
+                align-items:stretch;
+            }
+            .saved-voicing-label{
+                font-size:15px;
+                margin-bottom:10px;
+                text-align:left;
+            }
+            .saved-voicing-item svg{
+                width:100%;
+                height:120px;
+                margin-bottom:10px;
+                display:block;
+            }
+            .saved-remove-btn{
+                width:100%;
+                padding:10px;
+                font-size:15px;
+                border-radius:10px;
+            }
+
+            /* Input numbers and range controls should not overflow:
+               override inline widths with !important for mobile */
+            .input-section input[type="number"]{
+                width:48% !important;
+                box-sizing:border-box;
+                padding:8px 10px !important;
+                font-weight:700;
+            }
+
+            /* make sure current-voicing nav buttons fit */
+            .side-btn{
+                width:100%;
+                height:44px;
+                border-radius:10px;
+            }
+
+            /* avoid any horizontal overflow */
+            body, .container, .output-section, .controls-row { overflow-x: hidden; }
+
+            /* ensure mini svgs scale within cards */
+            .saved-voicing-item svg { max-width: 100%; height: auto; }
+
+        }
+
+        /* subtle animated micro-element to sell premium quality */
+        .accent-strip{
+            height:6px;
+            width:100%;
+            margin-top:12px;
+            border-radius:6px;
+            background: linear-gradient(90deg,var(--accent-2), var(--accent-3), var(--accent-1));
+            filter:drop-shadow(0 6px 20px rgba(60,110,255,0.06));
+            animation: glide 8s linear infinite;
+            opacity:0.95;
+        }
+        @keyframes glide{
+            0%{ background-position:0% 50%;}
+            50%{ background-position:100% 50%;}
+            100%{ background-position:0% 50%;}
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button id="theme-toggle" aria-label="Toggle theme"><i class="fa-solid fa-sun"></i></button>
+
+       <div class="logo-container">
+          <svg width="70" height="70" viewBox="0 0 80 80" aria-hidden="true">
+          <g transform="translate(40, 40) scale(1)">
+            <path d="M 0,-30 C -20,-20 -20,10 0,0" fill="#38BDF8" /> 
+            <path d="M 0,-30 C 20,-20 20,10 0,0" fill="#38BDF8" /> 
+            <g transform="rotate(90)">
+                <path d="M 0,-30 C -20,-20 -20,10 0,0" fill="#6EE7B7" />
+                <path d="M 0,-30 C 20,-20 20,10 0,0" fill="#6EE7B7" />
+            </g>
+            <g transform="rotate(180)">
+                <path d="M 0,-30 C -20,-20 -20,10 0,0" fill="#9B7CFF" />
+                <path d="M 0,-30 C 20,-20 20,10 0,0" fill="#9B7CFF" />
+            </g>
+            <g transform="rotate(270)">
+                <path d="M 0,-30 C -20,-20 -20,10 0,0" fill="#ef4444" />
+                <path d="M 0,-30 C 20,-20 20,10 0,0" fill="#ef4444" />
+            </g>
+            <circle cx="0" cy="0" r="8" fill="#1E293B" stroke="#475569" stroke-width="2"/>
+        </g>
+    </svg>
+    <div>
+                <div class="logo-title">Voicing Finder</div>
+                <div class="logo-sub">Fast chord predictions · beautiful voicing display</div>
+            </div>
+        </div>
+
+        <div class="controls-row" role="region" aria-label="Voice leading controls">
+            <div class="vl-panel" aria-hidden="false">
+                <div class="vl-field">
+                    <label for="scaleRoot">Scale Root</label>
+                    <select id="scaleRoot" aria-label="Scale Root">
+                        <option>C</option><option>C#</option><option>Db</option>
+                        <option>D</option><option>D#</option><option>Eb</option>
+                        <option>E</option><option>F</option><option>F#</option>
+                        <option>Gb</option><option>G</option><option>G#</option>
+                        <option>Ab</option><option>A</option><option>A#</option>
+                        <option>B</option>
+                    </select>
+                </div>
+
+                <div class="vl-field">
+                    <label for="scaleType">Scale Type</label>
+                    <select id="scaleType" aria-label="Scale Type">
+                        <option value="major">Major</option>
+                        <option value="minor">Minor</option>
+                        <option value="harmonic minor">Harmonic Minor</option>
+                        <option value="melodic minor">Melodic Minor</option>
+                    </select>
+                </div>
+
+                <div class="vl-field">
+                    <label for="cycle">Cycle</label>
+                    <select id="cycle" aria-label="Cycle">
+                        <option value="1" selected>2</option>
+                        <option value="2">3</option>
+                        <option value="3">4</option>
+                        <option value="4">5</option>
+                        <option value="5">6</option>
+                        <option value="6">7</option>
+                    </select>
+                </div>
+
+                <div class="vl-field">
+                    <label for="vlInterval">VL Interval</label>
+                    <input id="vlInterval" type="number" value="2" min="0" max="7" />
+                </div>
+
+                <div class="vl-field">
+                    <label>Direction</label>
+                    <div class="vl-direction" role="group" aria-label="Voice leading direction">
+                        <button type="button" class="vl-btn" data-val="-1" id="vlDown" title="Down">▼</button>
+                        <button type="button" class="vl-btn" data-val="0" id="vlNeutral" title="Neutral">•</button>
+                        <button type="button" class="vl-btn" data-val="1" id="vlUp" title="Up">▲</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="current-voicing" aria-label="Current voicing">
+            <button id="predictPrev" class="side-btn prev-btn" aria-label="Prev Chord">◀ Prev</button>
+
+            <input type="text" id="note1" class="note-square" placeholder="G" aria-label="Note 1">
+            <input type="text" id="note2" class="note-square" placeholder="C" aria-label="Note 2">
+            <input type="text" id="note3" class="note-square" placeholder="E" aria-label="Note 3">
+            <input type="text" id="note4" class="note-square" placeholder="A" aria-label="Note 4">
+
+            <button id="predictNext" class="side-btn next-btn" aria-label="Next Chord">Next ▶</button>
+
+            <div class="cv-nav" aria-hidden="true"></div>
+        </div>
+
+        <div class="input-section" aria-label="Fret and string range">
+            <div style="display:flex; gap:12px; align-items:center;">
+                <div>
+                    <label style="display:block;font-weight:800;color:var(--muted);margin-bottom:6px;">Fret Range</label>
+                    <div style="display:flex; gap:8px;">
+                        <input type="number" id="minFret" value="0" min="0" max="24" style="padding:8px 10px;border-radius:8px;border:0;background:#fff;color:#1b2430;font-weight:700;width:84px;text-align:center;">
+                        <input type="number" id="maxFret" value="24" min="0" max="24" style="padding:8px 10px;border-radius:8px;border:0;background:#fff;color:#1b2430;font-weight:700;width:84px;text-align:center;">
+                    </div>
+                </div>
+
+                <div>
+                    <label style="display:block;font-weight:800;color:var(--muted);margin-bottom:6px;">String Range</label>
+                    <div style="display:flex; gap:8px;">
+                        <input type="number" id="minString" value="1" min="1" max="6" style="padding:8px 10px;border-radius:8px;border:0;background:#fff;color:#1b2430;font-weight:700;width:84px;text-align:center;">
+                        <input type="number" id="maxString" value="6" min="1" max="6" style="padding:8px 10px;border-radius:8px;border:0;background:#fff;color:#1b2430;font-weight:700;width:84px;text-align:center;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="button-container" role="group" aria-label="Actions">
+            <button id="find-voicing-strict"><i class="fa-solid fa-magnifying-glass"></i>&nbsp;&nbsp;Strict Search</button>
+            <button id="find-voicing-flexible"><i class="fa-solid fa-filter"></i>&nbsp;&nbsp;Flexible Search</button>
+            <button id="play-voicing-button"><i class="fa-solid fa-play"></i>&nbsp;&nbsp;Play Chord</button>
+            <button id="store-voicing-button"><i class="fa-solid fa-bookmark"></i>&nbsp;&nbsp;Store Position</button>
+        </div>
+
+        <div class="output-section" role="region" aria-label="Voicing output">
+            <div class="output-section" role="region" aria-label="Voicing output">
+    
+    <div id="empty-state-placeholder" class="empty-state">
+        <i class="fa-solid fa-music"></i>
+        <h3>Find Your First Voicing</h3>
+        <p>Enter notes above and click 'Next Chord' or 'Strict Search' to begin.</p>
+    </div>
+            <svg id="fretboard-diagram" aria-hidden="false"></svg>
+            <div class="output-controls" role="toolbar">
+                <button id="prev-option" title="Previous position" style="height:44px;border-radius:10px;padding:8px 12px;background:rgba(255,255,255,0.03);border:0;color:var(--text-on-dark);cursor:pointer;"><i class="fa-solid fa-chevron-left"></i></button>
+                <div id="option-number">Enter notes to search</div>
+                <button id="next-option" title="Next position" style="height:44px;border-radius:10px;padding:8px 12px;background:rgba(255,255,255,0.03);border:0;color:var(--text-on-dark);cursor:pointer;"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+        </div>
+
+        <div class="accent-strip" aria-hidden="true"></div>
+
+        <div class="saved-voicings-section" aria-label="Saved voicings">
+            <h3>Saved Voicings</h3>
+            <div id="saved-voicings-container" class="saved-voicings-container" aria-live="polite"></div>
+        </div>
+    </div>
+
+    <script>
+    // Combined Voicing Finder + Voice Leading Predictor
+    document.addEventListener('DOMContentLoaded', () => {
+        // UI references
+        const noteInputs = ['note1','note2','note3','note4'].map(id => document.getElementById(id));
+        const minFretInput = document.getElementById('minFret');
+        const maxFretInput = document.getElementById('maxFret');
+        const minStringInput = document.getElementById('minString');
+        const maxStringInput = document.getElementById('maxString');
+
+        const findVoicingStrictButton = document.getElementById('find-voicing-strict');
+        const findVoicingFlexibleButton = document.getElementById('find-voicing-flexible');
+        const playVoicingButton = document.getElementById('play-voicing-button');
+        const storeVoicingButton = document.getElementById('store-voicing-button');
+
+        const predictNextBtn = document.getElementById('predictNext');
+        const predictPrevBtn = document.getElementById('predictPrev');
+
+        const optionNumberElement = document.getElementById('option-number');
+        const fretboardSVG = document.getElementById('fretboard-diagram');
+        const savedVoicingsContainer = document.getElementById('saved-voicings-container');
+        const prevButton = document.getElementById('prev-option');
+        const nextButton = document.getElementById('next-option');
+
+        const vlIntervalInput = document.getElementById('vlInterval');
+        const vlDirButtons = [document.getElementById('vlDown'), document.getElementById('vlNeutral'), document.getElementById('vlUp')];
+        const scaleRootEl = document.getElementById('scaleRoot');
+        const scaleTypeEl = document.getElementById('scaleType');
+        const cycleEl = document.getElementById('cycle');
+
+        let vlDirState = -1;
+        function setActiveDirection(val){
+            vlDirState = val;
+            vlDirButtons.forEach(b=>{
+                if(!b) return;
+                const v = parseInt(b.getAttribute('data-val'),10);
+                b.classList.toggle('active', v === val);
+                b.setAttribute('aria-pressed', String(v===val));
+            });
+        }
+        vlDirButtons.forEach(b=>{ if(b) b.addEventListener('click', ()=> setActiveDirection(parseInt(b.getAttribute('data-val'),10))); });
+        setActiveDirection(-1);
+
+        // --- Voicing Finder data & functions ---
+        let allVoicings = [];
+        let currentVoicingIndex = 0;
+        const NUM_FRETS = 24;
+        const NUM_STRINGS = 6;
+        const MAX_FRET_SPAN = 5;
+        const MOBILE_VISIBLE_FRETS = 7;
+        const BASE_NOTE_FONT_SIZE_VALUE = 18.0;
+        const MIN_FRET_WINDOW = 5; // minimum visible frets in zoom window
+
+        // New constant: visually pleasing fret width in px
+        const OPTIMAL_FRET_WIDTH = 48; // chosen pleasing pixel width per fret
+        const SVG_HORIZONTAL_PADDING = 50; // left+right combined padding inside viewBox
+        const DEFAULT_SVG_HEIGHT = 150; // default viewBox height used for drawing calculations
+
+        const noteToFretStringMap = {
+            'E': [{ fret: -1, string: 6, note: 'E' },{ fret: 6, string:5, note:'E' },{fret:1,string:4,note:'E'},{fret:8,string:3,note:'E'},{fret:4,string:2,note:'E'},{fret:-1,string:1,note:'E'},{fret:11,string:6,note:'E'},{fret:13,string:5,note:'E'},{fret:18,string:4,note:'E'},{fret:20,string:3,note:'E'},{fret:16,string:2,note:'E'},{fret:11,string:1,note:'E'}],
+            'F': [{fret:0,string:6,note:'F'},{fret:7,string:5,note:'F'},{fret:2,string:4,note:'F'},{fret:9,string:3,note:'F'},{fret:5,string:2,note:'F'},{fret:0,string:1,note:'F'},{fret:12,string:6,note:'F'},{fret:14,string:5,note:'F'},{fret:19,string:4,note:'F'},{fret:21,string:3,note:'F'},{fret:17,string:2,note:'F'},{fret:12,string:1,note:'F'}],
+            'F#': [{fret:1,string:6,note:'F#'},{fret:8,string:5,note:'F#'},{fret:3,string:4,note:'F#'},{fret:10,string:3,note:'F#'},{fret:6,string:2,note:'F#'},{fret:1,string:1,note:'F#'},{fret:13,string:6,note:'F#'},{fret:15,string:5,note:'F#'},{fret:20,string:4,note:'F#'},{fret:18,string:2,note:'F#'},{fret:13,string:1,note:'F#'}],
+            'G': [{fret:2,string:6,note:'G'},{fret:9,string:5,note:'G'},{fret:4,string:4,note:'G'},{fret:11,string:3,note:'G'},{fret:7,string:2,note:'G'},{fret:2,string:1,note:'G'},{fret:14,string:6,note:'G'},{fret:16,string:5,note:'G'},{fret:21,string:4,note:'G'},{fret:19,string:2,note:'G'},{fret:14,string:1,note:'G'}],
+            'G#': [{fret:3,string:6,note:'G#'},{fret:10,string:5,note:'G#'},{fret:5,string:4,note:'G#'},{fret:12,string:3,note:'G#'},{fret:8,string:2,note:'G#'},{fret:3,string:1,note:'G#'},{fret:15,string:6,note:'G#'},{fret:17,string:5,note:'G#'},{fret:12,string:3,note:'G#'},{fret:20,string:2,note:'G#'},{fret:15,string:1,note:'G#'}],
+            'A': [{fret:4,string:6,note:'A'},{fret:-1,string:5,note:'A'},{fret:6,string:4,note:'A'},{fret:1,string:3,note:'A'},{fret:9,string:2,note:'A'},{fret:4,string:1,note:'A'},{fret:16,string:6,note:'A'},{fret:11,string:5,note:'A'},{fret:13,string:4,note:'A'},{fret:18,string:3,note:'A'},{fret:21,string:2,note:'A'},{fret:16,string:1,note:'A'}],
+            'A#': [{fret:5,string:6,note:'A#'},{fret:0,string:5,note:'A#'},{fret:7,string:4,note:'A#'},{fret:2,string:3,note:'A#'},{fret:10,string:2,note:'A#'},{fret:5,string:1,note:'A#'},{fret:17,string:6,note:'A#'},{fret:12,string:5,note:'A#'},{fret:14,string:4,note:'A#'},{fret:19,string:3,note:'A#'},{fret:22,string:2,note:'A#'},{fret:17,string:1,note:'A#'}],
+            'B': [{fret:6,string:6,note:'B'},{fret:1,string:5,note:'B'},{fret:8,string:4,note:'B'},{fret:3,string:3,note:'B'},{fret:-1,string:2,note:'B'},{fret:6,string:1,note:'B'},{fret:18,string:6,note:'B'},{fret:13,string:5,note:'B'},{fret:15,string:4,note:'B'},{fret:20,string:3,note:'B'},{fret:11,string:2,note:'B'},{fret:18,string:1,note:'B'}],
+            'C': [{fret:7,string:6,note:'C'},{fret:2,string:5,note:'C'},{fret:9,string:4,note:'C'},{fret:4,string:3,note:'C'},{fret:0,string:2,note:'C'},{fret:7,string:1,note:'C'},{fret:19,string:6,note:'C'},{fret:14,string:5,note:'C'},{fret:16,string:4,note:'C'},{fret:21,string:3,note:'C'},{fret:12,string:2,note:'C'},{fret:19,string:1,note:'C'}],
+            'C#': [{fret:8,string:6,note:'C#'},{fret:3,string:5,note:'C#'},{fret:10,string:4,note:'C#'},{fret:5,string:3,note:'C#'},{fret:1,string:2,note:'C#'},{fret:8,string:1,note:'C#'},{fret:20,string:6,note:'C#'},{fret:15,string:5,note:'C#'},{fret:17,string:4,note:'C#'},{fret:22,string:3,note:'C#'},{fret:13,string:2,note:'C#'},{fret:20,string:1,note:'C#'}],
+            'D': [{fret:9,string:6,note:'D'},{fret:4,string:5,note:'D'},{fret:-1,string:4,note:'D'},{fret:6,string:3,note:'D'},{fret:2,string:2,note:'D'},{fret:9,string:1,note:'D'},{fret:21,string:6,note:'D'},{fret:16,string:5,note:'D'},{fret:11,string:4,note:'D'},{fret:18,string:3,note:'D'},{fret:14,string:2,note:'D'},{fret:21,string:1,note:'D'}],
+            'D#': [{fret:10,string:6,note:'D#'},{fret:5,string:5,note:'D#'},{fret:0,string:4,note:'D#'},{fret:7,string:3,note:'D#'},{fret:3,string:2,note:'D#'},{fret:10,string:1,note:'D#'},{fret:22,string:6,note:'D#'},{fret:17,string:5,note:'D#'},{fret:12,string:4,note:'D#'},{fret:19,string:3,note:'D#'},{fret:15,string:2,note:'D#'},{fret:22,string:1,note:'D#'}]
+        };
+
+        const flatToSharpMap = { 'DB': 'C#', 'EB': 'D#', 'GB': 'F#', 'AB': 'G#', 'BB': 'A#' };
+        function normalizeForSearch(note) { return (flatToSharpMap[note?.toUpperCase()] || (note||'').toUpperCase()).replace(/\s+/g,''); }
+
+        function getPermutations(arr) {
+            const result = [];
+            if (arr.length === 0) return [[]];
+            if (arr.length === 1) return [arr];
+            for (let i = 0; i < arr.length; i++) {
+                const first = arr[i];
+                const rest = arr.slice(0,i).concat(arr.slice(i+1));
+                const perms = getPermutations(rest);
+                for (const p of perms) result.push([first].concat(p));
+            }
+            return result;
+        }
+
+        function sortVoicings(voicings) {
+            return voicings.sort((a,b)=>{
+                const fretsA = a.map(v=>v.fret), fretsB = b.map(v=>v.fret);
+                const spanA = Math.max(...fretsA) - Math.min(...fretsA);
+                const spanB = Math.max(...fretsB) - Math.min(...fretsB);
+                const sA = a.map(v=>v.string).sort((x,y)=>x-y), sB = b.map(v=>v.string).sort((x,y)=>x-y);
+                let jumpsA=0, jumpsB=0;
+                for(let i=1;i<sA.length;i++) if(sA[i]-sA[i-1]>1) jumpsA++;
+                for(let i=1;i<sB.length;i++) if(sB[i]-sB[i-1]>1) jumpsB++;
+                if(jumpsA===0 && jumpsB>0) return -1;
+                if(jumpsA>0 && jumpsB===0) return 1;
+                if(spanA!==spanB) return spanA - spanB;
+                return jumpsA - jumpsB;
+            });
+        }
+
+        function findVoicingsRecursiveStrict(notes, currentVoicing, usedStrings, allVoicings, noteIndex, minString, maxString) {
+            if (noteIndex === notes.length) { allVoicings.push([...currentVoicing]); return; }
+            const originalNote = notes[noteIndex];
+            const noteToFind = normalizeForSearch(originalNote);
+            const possiblePositions = noteToFretStringMap[noteToFind];
+            if (!possiblePositions) return;
+            for (const pos of possiblePositions) {
+                if (pos.string >= minString && pos.string <= maxString) {
+                    if (!usedStrings.has(pos.string)) {
+                        if (noteIndex === 0 || pos.string < currentVoicing[currentVoicing.length - 1].string) {
+                            usedStrings.add(pos.string);
+                            const newVoicing = [...currentVoicing, { ...pos, originalNote: originalNote }];
+                            findVoicingsRecursiveStrict(notes, newVoicing, usedStrings, allVoicings, noteIndex + 1, minString, maxString);
+                            usedStrings.delete(pos.string);
+                        }
+                    }
+                }
+            }
+        }
+
+        function getUniqueVoicings(foundVoicings, minFret, maxFret) {
+            const unique = []; const keys = new Set();
+            foundVoicings.forEach(voicing=>{
+                const frets = voicing.map(v=>v.fret);
+                if (frets.length===0) return;
+                const minV = Math.min(...frets), maxV = Math.max(...frets);
+                const span = maxV - minV;
+                if (minV >= minFret && maxV <= maxFret && span <= MAX_FRET_SPAN) {
+                    const sorted = [...voicing].sort((a,b)=>a.string-b.string);
+                    const key = JSON.stringify(sorted.map(v=>({fret:v.fret,string:v.string})));
+                    if(!keys.has(key)){ keys.add(key); unique.push(voicing); }
+                }
+            });
+            return unique;
+        }
+
+        function findAndFilterVoicingsStrict() {
+            const inputNotes = noteInputs.map(i => i.value).filter(n => n && n.trim() !== '');
+            if (inputNotes.length === 0) return [];
+            const minString = parseInt(minStringInput.value,10) || 1;
+            const maxString = parseInt(maxStringInput.value,10) || 6;
+            const minFret = parseInt(minFretInput.value,10) || 0;
+            const maxFret = parseInt(maxFretInput.value,10) || 24;
+            const found = []; findVoicingsRecursiveStrict(inputNotes, [], new Set(), found, 0, minString, maxString);
+            const unique = getUniqueVoicings(found, minFret, maxFret);
+            return sortVoicings(unique);
+        }
+
+        function findAndFilterVoicingsFlexible() {
+            const inputNotes = noteInputs.map(i => i.value).filter(n => n && n.trim() !== '');
+            if (inputNotes.length === 0) return [];
+            const minString = parseInt(minStringInput.value,10) || 1;
+            const maxString = parseInt(maxStringInput.value,10) || 6;
+            const minFret = parseInt(minFretInput.value,10) || 0;
+            const maxFret = parseInt(maxFretInput.value,10) || 24;
+            const all = [];
+            const perms = getPermutations(inputNotes);
+            perms.forEach(p=>{
+                const found = []; findVoicingsRecursiveStrict(p, [], new Set(), found, 0, minString, maxString);
+                all.push(...found);
+            });
+            const unique = getUniqueVoicings(all, minFret, maxFret);
+            return sortVoicings(unique);
+        }
+
+        // SVG drawing utilities - revised to use fixed per-fret pixel width and dynamic svg width
+        function drawFretboard(targetSVG, startFret = 0, numFrets = NUM_FRETS, noteRadius = 11.11, noteFontSize = 12.6, fretFontSize = BASE_NOTE_FONT_SIZE_VALUE * 0.9, yOffsetMultiplier = 1.5) {
+            targetSVG.innerHTML = '';
+
+            if (!numFrets || numFrets <= 0) numFrets = NUM_FRETS;
+            // compute dimensions based on fixed fret width
+            const fretWidthPx = OPTIMAL_FRET_WIDTH;
+            const FRETBOARD_WIDTH = fretWidthPx * numFrets;
+            const VIEWBOX_PADDING = SVG_HORIZONTAL_PADDING; // total left+right padding inside viewBox
+            const viewBoxWidth = FRETBOARD_WIDTH + VIEWBOX_PADDING;
+            const viewBoxHeight = targetSVG.clientHeight && !isNaN(targetSVG.clientHeight) ? targetSVG.clientHeight : DEFAULT_SVG_HEIGHT;
+
+            // set viewBox and explicit svg size (svg width will be used for desktop where there's room,
+            // max-width:100% in CSS prevents overflow on small screens and will scale down the svg if needed)
+            targetSVG.setAttribute('viewBox', `0 0 ${viewBoxWidth} ${viewBoxHeight}`);
+            targetSVG.style.width = `${viewBoxWidth}px`;
+            targetSVG.style.height = `${viewBoxHeight}px`;
+
+            const FRETBOARD_START_X = VIEWBOX_PADDING / 2;
+            const FRETBOARD_START_Y = 20;
+            const FRETBOARD_HEIGHT = Math.max(60, viewBoxHeight - 40);
+            const STRING_HEIGHT = FRETBOARD_HEIGHT / (NUM_STRINGS - 1);
+            const FRET_WIDTH = fretWidthPx;
+
+            // strings
+            for (let i = 0; i < NUM_STRINGS; i++) {
+                const y = FRETBOARD_START_Y + i * STRING_HEIGHT;
+                targetSVG.innerHTML += `<line x1="${FRETBOARD_START_X}" y1="${y}" x2="${FRETBOARD_START_X + FRETBOARD_WIDTH}" y2="${y}" stroke="rgba(255,255,255,0.70)" stroke-width="1.2" class="string-line" />`;
+                if (targetSVG === fretboardSVG) targetSVG.innerHTML += `<text x="${FRETBOARD_START_X - 10}" y="${y + noteFontSize * 0.3}" font-size="${noteFontSize}" text-anchor="end" fill="rgba(255,255,255,0.75)">${i + 1}</text>`;
+            }
+
+            // frets lines and numbers
+            for (let i = 0; i <= numFrets; i++) {
+                const x = FRETBOARD_START_X + i * FRET_WIDTH;
+                targetSVG.innerHTML += `<line x1="${x}" y1="${FRETBOARD_START_Y}" x2="${x}" y2="${FRETBOARD_START_Y + (NUM_STRINGS - 1) * STRING_HEIGHT}" stroke="rgba(255,255,255,0.7)" stroke-width="1.2" class="fret-line" />`;
+                const fretNumber = startFret + i;
+                 if (fretNumber >= 0 && i > 0) { 
+                    targetSVG.innerHTML += `<text x="${x - FRET_WIDTH / 2}" y="${FRETBOARD_START_Y + (NUM_STRINGS - 1) * STRING_HEIGHT + noteRadius * yOffsetMultiplier}" font-size="${fretFontSize}" text-anchor="middle" fill="rgba(255,255,255,0.75)">${fretNumber}</text>`;
+                }
+            }
+        }
+
+        function drawVoicing(targetSVG, voicing, providedStartFret = null, providedNumFrets = null) {
+            const isMain = targetSVG === fretboardSVG;
+            const BASE_NOTE_RADIUS = 11.11;
+            const BASE_NOTE_FONT_SIZE = BASE_NOTE_FONT_SIZE_VALUE;
+
+            // Determine dynamic window for this voicing
+            let startFret = (providedStartFret === null || providedStartFret === undefined) ? null : providedStartFret;
+            let numFretsToDisplay = (providedNumFrets === null || providedNumFrets === undefined) ? null : providedNumFrets;
+
+            // Normalize frets: treat negative (e.g., -1) as 0 (open)
+            const fretValues = (voicing && voicing.length > 0) ? voicing.map(n => Math.max(0, Number(n.fret || 0))) : [];
+
+            if (startFret === null) {
+                if (fretValues.length === 0) {
+                    // no voicing -> full neck
+                    startFret = 0;
+                    numFretsToDisplay = NUM_FRETS;
+                } else {
+                    let minF = Math.min(...fretValues);
+                    let maxF = Math.max(...fretValues);
+                    let s = Math.max(0, minF - 1);
+                    let e = Math.min(NUM_FRETS, maxF + 1);
+                    if (e - s < MIN_FRET_WINDOW) {
+                        e = Math.min(NUM_FRETS, s + MIN_FRET_WINDOW);
+                        if (e - s < MIN_FRET_WINDOW) {
+                            s = Math.max(0, e - MIN_FRET_WINDOW);
+                        }
+                    }
+                    startFret = s;
+                    numFretsToDisplay = Math.max(1, e - s);
+                }
+            } else {
+                if (!numFretsToDisplay) numFretsToDisplay = isMain ? NUM_FRETS : MOBILE_VISIBLE_FRETS;
+            }
+
+            // Mobile / small-screen adjustments: ensure at least MOBILE_VISIBLE_FRETS for readability
+            if (!isMain || (isMain && window.innerWidth <= 768)) {
+                if (numFretsToDisplay < MOBILE_VISIBLE_FRETS) numFretsToDisplay = MOBILE_VISIBLE_FRETS;
+                if (fretValues.length > 0) {
+                    const minF = Math.min(...fretValues);
+                    if (startFret === 0 && minF > 1) startFret = Math.max(0, minF - 1);
+                }
+                if (startFret + numFretsToDisplay > NUM_FRETS) startFret = Math.max(0, NUM_FRETS - numFretsToDisplay);
+            } else {
+                if (startFret + numFretsToDisplay > NUM_FRETS) numFretsToDisplay = Math.max(1, NUM_FRETS - startFret);
+            }
+
+            // Draw fretboard using fixed fret width calculation
+            drawFretboard(targetSVG, startFret, numFretsToDisplay, BASE_NOTE_RADIUS, BASE_NOTE_FONT_SIZE * 0.7, BASE_NOTE_FONT_SIZE * 0.9, isMain ? 1.5 : 2.3);
+
+            // Now position note markers relative to the same fixed sizing
+            const viewBoxString = targetSVG.getAttribute('viewBox') || `0 0 ${targetSVG.clientWidth || 1000} ${targetSVG.clientHeight || DEFAULT_SVG_HEIGHT}`;
+            const [, , viewBoxWidth, viewBoxHeight] = viewBoxString.split(' ').map(Number);
+            const FRETBOARD_WIDTH = (numFretsToDisplay * OPTIMAL_FRET_WIDTH);
+            const FRETBOARD_START_X = SVG_HORIZONTAL_PADDING / 2;
+            const FRETBOARD_START_Y = 20;
+            const FRETBOARD_HEIGHT = Math.max(60, viewBoxHeight - 40);
+            const FRET_WIDTH = OPTIMAL_FRET_WIDTH;
+            const STRING_HEIGHT = FRETBOARD_HEIGHT / (NUM_STRINGS - 1);
+
+            voicing.forEach(notePos=>{
+                const string = notePos.string; const fret = Math.max(0, Number(notePos.fret || 0));
+                const noteName = notePos.originalNote || notePos.note;
+                if (fret >= startFret && fret < startFret + numFretsToDisplay) {
+                    const x = FRETBOARD_START_X + (fret - startFret) * FRET_WIDTH + FRET_WIDTH / 2;
+                    const y = FRETBOARD_START_Y + (string - 1) * STRING_HEIGHT;
+                    const noteRadius = BASE_NOTE_RADIUS;
+                    const noteFontSize = BASE_NOTE_FONT_SIZE * 0.8;
+                    targetSVG.innerHTML += `<circle cx="${x}" cy="${y}" r="${noteRadius}" fill="#f8fafc" stroke="rgba(0,0,0,0.06)" stroke-width="1.2" class="note-circle" />`;
+                    targetSVG.innerHTML += `<text x="${x}" y="${y}" text-anchor="middle" alignment-baseline="central" font-size="${noteFontSize}" fill="#0b1220" class="note-text" font-weight="700">${noteName}</text>`;
+                }
+            });
+        }
+
+function displayCurrentVoicing() {
+    const emptyState = document.getElementById('empty-state-placeholder');
+    const fretboard = document.getElementById('fretboard-diagram');
+    const outputControls = document.querySelector('.output-controls');
+
+    // Check if there are any voicings to display
+    if (allVoicings.length > 0 && allVoicings[currentVoicingIndex]) {
+        // --- If there ARE results ---
+        emptyState.style.display = 'none'; // Hide the message
+        fretboard.style.display = 'block'; // Show the fretboard
+        outputControls.style.display = 'flex'; // Show the nav buttons
+
+        const voicing = allVoicings[currentVoicingIndex];
+        drawVoicing(fretboard, voicing); // Draw the voicing on the fretboard
+        
+        optionNumberElement.textContent = `Option ${currentVoicingIndex + 1} of ${allVoicings.length}`;
+        prevButton.disabled = currentVoicingIndex === 0;
+        nextButton.disabled = currentVoicingIndex >= allVoicings.length - 1;
+        [playVoicingButton, storeVoicingButton].forEach(b => b.disabled = false);
+
+    } else {
+        // --- If there are NO results (The Empty State) ---
+        emptyState.style.display = 'flex'; // Show the message
+        fretboard.style.display = 'none'; // Hide the fretboard
+        outputControls.style.display = 'none'; // Hide the nav buttons
+        
+        // This handles the text after a search finds nothing
+        const predictedNotes = noteInputs.map(input => input.value).filter(Boolean);
+        if (predictedNotes.length > 0 && allVoicings.length === 0 && document.activeElement.tagName !== 'INPUT') {
+             optionNumberElement.textContent = `Predicted: ${predictedNotes.join(', ')} (No voicings found)`;
+        } else {
+            optionNumberElement.textContent = "Enter notes to search";
+        }
+        
+        [prevButton, nextButton, playVoicingButton, storeVoicingButton].forEach(b => b.disabled = true);
+    }
+}
+
+        // Sound engine
+        let audioContext;
+        const stringFrequencies = {1:329.63,2:246.94,3:196.00,4:146.83,5:110.00,6:82.41};
+        function initAudioContext(){ if(!audioContext) audioContext = new (window.AudioContext||window.webkitAudioContext)(); }
+        function playNote(string,fret){
+            initAudioContext();
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            const filter = audioContext.createBiquadFilter();
+            const frequency = stringFrequencies[string] * Math.pow(2, fret/12);
+            osc.type='sine'; osc.frequency.value = frequency;
+            filter.type='lowpass'; filter.frequency.value=2500; filter.Q.value=1;
+            const now = audioContext.currentTime; const attack=0.04, decay=0.5, sustain=0.25, release=0.6;
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(0.28, now+attack);
+            gain.gain.linearRampToValueAtTime(sustain, now+attack+decay);
+            gain.gain.setValueAtTime(sustain, now+0.9);
+            gain.gain.linearRampToValueAtTime(0, now+0.9+release);
+            osc.connect(filter); filter.connect(gain); gain.connect(audioContext.destination);
+            osc.start(now); osc.stop(now+0.9+release+0.05);
+        }
+        function playVoicing() {
+            const v = allVoicings[currentVoicingIndex];
+            if (!v || v.length===0) { optionNumberElement.textContent = "No chord to play. Find a voicing first."; return; }
+            v.forEach(n=> playNote(n.string, n.fret));
+        }
+
+        // Saved voicings
+        function loadSavedVoicings(){ try{ const s=localStorage.getItem('savedGuitarVoicings'); return s?JSON.parse(s):[] }catch(e){return[];} }
+        function saveVoicing(voicing){
+            const saved = loadSavedVoicings();
+            const key = JSON.stringify(voicing.map(v=>({fret:v.fret,string:v.string})));
+            if (saved.some(s=>JSON.stringify(s.voicing.map(v=>({fret:v.fret,string:v.string})))===key)) {
+                storeVoicingButton.textContent = "Already Saved!";
+                setTimeout(()=> storeVoicingButton.textContent = "Store Position", 1300);
+                return;
+            }
+            const item = { id:Date.now(), label: voicing.map(v=>v.originalNote||v.note).join('-'), voicing };
+            saved.push(item); localStorage.setItem('savedGuitarVoicings', JSON.stringify(saved)); renderSavedVoicings();
+            storeVoicingButton.textContent = "Saved!"; setTimeout(()=> storeVoicingButton.textContent = "Store Position",1300);
+        }
+        function deleteVoicing(id){ let s=loadSavedVoicings(); s=s.filter(x=>x.id!==id); localStorage.setItem('savedGuitarVoicings', JSON.stringify(s)); renderSavedVoicings(); }
+        function renderSavedVoicings(){
+            savedVoicingsContainer.innerHTML=''; const saved = loadSavedVoicings();
+            saved.forEach(item=>{
+                const div = document.createElement('div');
+                div.className='saved-voicing-item';
+                div.innerHTML = `<span class="saved-voicing-label">${item.label.replace(/-/g,'•')}</span>`;
+                const mini = document.createElementNS("http://www.w3.org/2000/svg","svg");
+                mini.setAttribute('preserveAspectRatio','xMidYMid meet');
+                mini.setAttribute('viewBox','0 0 350 150');
+                div.appendChild(mini);
+                drawVoicing(mini, item.voicing); // mini will auto-use a compact window
+                const del = document.createElement('button'); del.textContent='Remove'; del.className='saved-remove-btn';
+                del.addEventListener('click', ()=> deleteVoicing(item.id));
+                div.appendChild(del);
+                savedVoicingsContainer.appendChild(div);
+            });
+        }
+
+        // Events
+        findVoicingStrictButton.addEventListener('click', ()=>{
+            allVoicings = findAndFilterVoicingsStrict(); currentVoicingIndex = 0; displayCurrentVoicing();
+        });
+        findVoicingFlexibleButton.addEventListener('click', ()=>{
+            allVoicings = findAndFilterVoicingsFlexible(); currentVoicingIndex = 0; displayCurrentVoicing();
+        });
+        storeVoicingButton.addEventListener('click', ()=> { if (allVoicings.length>0) saveVoicing(allVoicings[currentVoicingIndex]); });
+        prevButton.addEventListener('click', ()=> { if (currentVoicingIndex>0) { currentVoicingIndex--; displayCurrentVoicing(); } });
+        nextButton.addEventListener('click', ()=> { if (currentVoicingIndex < allVoicings.length-1) { currentVoicingIndex++; displayCurrentVoicing(); } });
+        playVoicingButton.addEventListener('click', playVoicing);
+        window.addEventListener('resize', ()=>{ displayCurrentVoicing(); adjustCvNavForMobile(); });
+
+        displayCurrentVoicing();
+        renderSavedVoicings();
+
+        // --- Voice Leading Predictor logic ---
+        const vl_notesMap = { 'C':0,'C#':1,'DB':1,'D':2,'D#':3,'EB':3,'E':4,'F':5,'F#':6,'GB':6,'G':7,'G#':8,'AB':8,'A':9,'A#':10,'BB':10,'B':11 };
+        const vl_noteNames = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+        const vl_scales = {
+            'major': [0,2,4,5,7,9,11],
+            'minor': [0,2,3,5,7,8,10],
+            'harmonic minor': [0,2,3,5,7,8,11],
+            'melodic minor': [0,2,3,5,7,9,11]
+        };
+        const vl_chordStructures = {
+            'maj7':[0,4,7,11],'m7':[0,3,7,10],'7':[0,4,7,10],'m7b5':[0,3,6,10],
+            'm(maj7)': [0,3,7,11],'maj7(#5)': [0,4,8,11],'dim7': [0,3,6,9],
+            'maj': [0,4,7],'min': [0,3,7],'dim': [0,3,6],'aug': [0,4,8]
+        };
+        const vl_diatonicChords = {
+            'major': ['maj7','m7','m7','maj7','7','m7','m7b5'],
+            'minor': ['m7','m7b5','maj7','m7','m7','maj7','7'],
+            'harmonic minor': ['m(maj7)','m7b5','maj7(#5)','m7','7','maj7','dim7'],
+            'melodic minor': ['m(maj7)','m7','maj7(#5)','7','7','m7b5','m7b5']
+        };
+        const vl_diatonicTriads = {
+            'major': ['maj','min','min','maj','maj','min','dim'],
+            'minor': ['min','dim','maj','min','min','maj','maj'],
+            'harmonic minor':['min','dim','aug','min','maj','maj','dim'],
+            'melodic minor': ['min','min','aug','maj','maj','dim','dim']
+        };
+
+        function vl_normalize(s){
+            if(!s) return '';
+            let str = String(s).trim().replace(/♭/g,'b').replace(/♯/g,'#');
+            str = str.replace(/\s+/g,'');
+            if(str.length===0) return '';
+            const first = str.charAt(0).toUpperCase(); const rest = str.slice(1).toLowerCase();
+            return first + rest;
+        }
+        function vl_pc(raw){
+            const n = vl_normalize(raw); if(!n) return -1;
+            const key = n.toUpperCase();
+            return (vl_notesMap[key] !== undefined) ? vl_notesMap[key] : -1;
+        }
+        function vl_nameFromPc(v){ return vl_noteNames[((v%12)+12)%12]; }
+        function vl_getScale(root, type){
+            const struct = vl_scales[type.toLowerCase()]; const rv = vl_pc(root);
+            if(!struct || rv < 0) return null;
+            return struct.map(i => vl_nameFromPc(rv + i));
+        }
+        function vl_identifyChord(notes){
+            const pcs = [...new Set(notes.map(vl_normalize).filter(Boolean).map(vl_pc).filter(v=>v>=0))].sort((a,b)=>a-b);
+            if(pcs.length < 3) return null;
+            for(const rootName of vl_noteNames){
+                const r = vl_pc(rootName);
+                for(const type in vl_chordStructures){
+                    const structure = vl_chordStructures[type];
+                    const chordPc = structure.map(i => ((r + i)%12+12)%12).sort((a,b)=>a-b);
+                    if(chordPc.length===pcs.length && chordPc.every((v,i)=>v===pcs[i])){
+                        return { root: rootName, type, notes: chordPc.map(vl_nameFromPc) };
+                    }
+                }
+            }
+            return null;
+        }
+        function vl_indicesInScale(pcVal, scalePcs){
+            const res=[]; for(let i=0;i<scalePcs.length;i++){ if(((scalePcs[i]%12)+12)%12 === ((pcVal%12)+12)%12) res.push(i); } return res;
+        }
+        function vl_findClosestInDirection(startRaw, targetPcs, dir, thresholdSteps, usedSet, scalePcs){
+            const startPc = vl_pc(startRaw); if(startPc<0) return null;
+            const startIdxs = vl_indicesInScale(startPc, scalePcs); const sIdxCandidates = startIdxs.length?startIdxs:[0];
+            let best=null, bestSteps=Infinity;
+            for(const tpc of targetPcs){
+                if(usedSet.has(tpc)) continue;
+                const tIdxs = vl_indicesInScale(tpc, scalePcs); const tIdxCandidates = tIdxs.length?tIdxs:[0];
+                for(const si of sIdxCandidates){
+                    for(const ti of tIdxCandidates){
+                        for(let k=-1;k<=1;k++){
+                            const stepsUp = (ti - si) + k*7; const stepsDown = -stepsUp;
+                            if(dir === 1 && stepsUp > 0 && stepsUp <= thresholdSteps && stepsUp < bestSteps){ bestSteps = stepsUp; best = tpc; }
+                            else if(dir === -1 && stepsDown > 0 && stepsDown <= thresholdSteps && stepsDown < bestSteps){ bestSteps = stepsDown; best = tpc; }
+                            else if(dir === 0){ const absSteps = Math.abs(stepsUp); if(absSteps <= thresholdSteps && absSteps < bestSteps){ bestSteps = absSteps; best = tpc; } }
+                        }
+                    }
+                }
+            }
+            if(best === null && dir !== 0){
+                for(const tpc of targetPcs){ if(usedSet.has(tpc)) continue; if(((tpc%12)+12)%12 === ((startPc%12)+12)%12){ best = tpc; break; } }
+            }
+            return best;
+        }
+        function vl_mapVoices(inputVoices, nextChordPcs, dir, vlThresholdSteps, frozenPcsSet, scalePcs){
+            const assigned = new Array(inputVoices.length).fill(null); const used = new Set();
+            for(let i=0;i<inputVoices.length;i++){
+                const raw = inputVoices[i]; const vpc = vl_pc(raw);
+                if(vpc >= 0 && frozenPcsSet.has(vpc)){
+                    if(nextChordPcs.includes(vpc) && !used.has(vpc)){ assigned[i]=vpc; used.add(vpc); continue; }
+                    const pick = vl_findClosestInDirection(raw, nextChordPcs, 0, 7, used, scalePcs);
+                    if(pick!==null){ assigned[i]=pick; used.add(pick); }
+                }
+            }
+            for(let i=0;i<inputVoices.length;i++){
+                if(assigned[i] !== null) continue;
+                const raw = inputVoices[i];
+                const pick = vl_findClosestInDirection(raw, nextChordPcs, dir, vlThresholdSteps, used, scalePcs);
+                if(pick !== null){ assigned[i]=pick; used.add(pick); }
+            }
+            for(let i=0;i<assigned.length;i++){
+                if(assigned[i]===null){
+                    const available = nextChordPcs.filter(p=>!used.has(p));
+                    if(available.length>0){ assigned[i]=available[0]; used.add(available[0]); }
+                }
+            }
+            return assigned.filter(v=>v!==null);
+        }
+
+        function vl_diatonicChordPcs(scaleRoot, scaleType, degree, chordFamily='7th'){
+            const scale = vl_getScale(scaleRoot, scaleType); if(!scale) return null;
+            const idx = (degree-1+7)%7;
+            let chordType;
+            if(chordFamily === 'triad'){ const map = vl_diatonicTriads[scaleType]; if(!map) return null; chordType = map[idx]; }
+            else { const map = vl_diatonicChords[scaleType]; if(!map) return null; chordType = map[idx]; }
+            const structure = vl_chordStructures[chordType]; if(!structure) return null;
+            const rootPc = vl_pc(scale[idx]);
+            return structure.map(i => ((rootPc + i) % 12 + 12)%12);
+        }
+
+        function setNoteInputsFromArray(arr){
+            for(let i=0;i<4;i++){
+                const el = noteInputs[i];
+                if(!el) continue;
+                el.value = arr[i] !== undefined && arr[i] !== null ? arr[i] : '';
+            }
+        }
+
+        function runPredict(harmonicDirection){
+            const scaleRoot = scaleRootEl.value || 'C';
+            const scaleType = (scaleTypeEl.value || 'major').toLowerCase();
+            const cycleVal = parseInt(cycleEl.value,10) || 1;
+            const vlInterval = Math.max(0, parseInt(vlIntervalInput.value,10) || 2);
+            const vlDir = vlDirState;
+            const inputVoices = noteInputs.map(n=> vl_normalize(n.value));
+
+            const chordIdent = vl_identifyChord(inputVoices);
+            if(!chordIdent){
+                optionNumberElement.textContent = 'Error: cannot identify current chord.';
+                return;
+            }
+
+            const scale = vl_getScale(scaleRoot, scaleType);
+            if(!scale){ optionNumberElement.textContent = 'Error: invalid scale'; return; }
+
+            const curRootPc = vl_pc(chordIdent.root);
+            let curDegreeIndex = scale.map(vl_pc).indexOf(curRootPc);
+            if(curDegreeIndex === -1){ optionNumberElement.textContent = 'Error: starting chord root not in scale.'; return; }
+
+            const struct = vl_chordStructures[chordIdent.type];
+            const chordFamily = (struct && struct.length === 3) ? 'triad' : '7th';
+
+            const targetDegree = ((curDegreeIndex + (cycleVal * harmonicDirection)) % 7 + 7) % 7 + 1;
+            const nextChordPcs = vl_diatonicChordPcs(scaleRoot, scaleType, targetDegree, chordFamily);
+            if(!nextChordPcs){ optionNumberElement.textContent = 'Error building target chord.'; return; }
+
+            const startPcs = inputVoices.map(vl_pc).filter(v=>v>=0);
+            const nextSet = new Set(nextChordPcs);
+            const autoFrozenSet = new Set(startPcs.filter(p=> nextSet.has(p)));
+            const combinedFrozenSet = new Set([...autoFrozenSet]);
+            const scalePcs = scale.map(vl_pc);
+
+            const activeInputVoices = inputVoices.filter(v=>v && v.length>0);
+            const mappedPcs = vl_mapVoices(activeInputVoices, nextChordPcs, vlDir, vlInterval, combinedFrozenSet, scalePcs);
+            const finalNames = mappedPcs.map(vl_nameFromPc);
+
+            setNoteInputsFromArray(finalNames);
+
+            allVoicings = findAndFilterVoicingsStrict();
+            currentVoicingIndex = 0;
+            if(allVoicings.length===0){
+                optionNumberElement.textContent = `Predicted: ${finalNames.join(', ')} — No strict voicings found`;
+            } else {
+                displayCurrentVoicing();
+            }
+        }
+
+        if(predictNextBtn) predictNextBtn.addEventListener('click', ()=> runPredict(1));
+        if(predictPrevBtn) predictPrevBtn.addEventListener('click', ()=> runPredict(-1));
+
+        // normalize note inputs on blur
+        noteInputs.forEach(el=>{
+            if(!el) return;
+            el.addEventListener('blur', ()=> { el.value = vl_normalize(el.value); });
+            el.addEventListener('keydown', (e)=> { if(e.key==='Enter'){ el.blur(); e.preventDefault(); } });
+        });
+
+        // mobile placement of prev/next
+        function adjustCvNavForMobile(){
+            const cvNav = document.querySelector('.cv-nav');
+            if(window.innerWidth <= 768){
+                cvNav.style.display = 'flex';
+                const predictPrev = document.getElementById('predictPrev');
+                const predictNext = document.getElementById('predictNext');
+                predictPrev.style.display = '';
+                predictNext.style.display = '';
+                if(cvNav && !cvNav.contains(predictPrev)){ cvNav.appendChild(predictPrev); }
+                if(cvNav && !cvNav.contains(predictNext)){ cvNav.appendChild(predictNext); }
+            } else {
+                const currentVoicing = document.querySelector('.current-voicing');
+                const predictPrev = document.getElementById('predictPrev');
+                const predictNext = document.getElementById('predictNext');
+                const cvNav = document.querySelector('.cv-nav');
+                if(currentVoicing && !currentVoicing.contains(predictPrev)){ currentVoicing.insertBefore(predictPrev, currentVoicing.firstChild); }
+                if(currentVoicing && !currentVoicing.contains(predictNext)){ currentVoicing.appendChild(predictNext); }
+                if(cvNav) cvNav.style.display = 'none';
+            }
+        }
+        window.addEventListener('resize', adjustCvNavForMobile);
+        adjustCvNavForMobile();
+
+        // Theme toggle
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeIcon = themeToggleBtn.querySelector('i');
+        themeToggleBtn.addEventListener('click', ()=>{
+            if(document.body.classList.contains('light-theme')){ document.body.classList.remove('light-theme'); themeIcon.classList.replace('fa-moon','fa-sun'); localStorage.setItem('theme','dark-theme'); }
+            else { document.body.classList.add('light-theme'); themeIcon.classList.replace('fa-sun','fa-moon'); localStorage.setItem('theme','light-theme'); }
+            displayCurrentVoicing(); renderSavedVoicings();
+        });
+
+        const savedTheme = localStorage.getItem('theme');
+        if(savedTheme === 'light-theme'){ document.body.classList.add('light-theme'); themeIcon.classList.replace('fa-sun','fa-moon'); }
+
+        optionNumberElement.textContent = 'Ready. Use Strict Search or Next Chord.';
+    });
+    </script>
+</body>
+
+</html>

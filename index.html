@@ -222,30 +222,49 @@
         .saved-voicings-section{ margin-top:18px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.03); }
         .saved-voicings-section h3{ margin:0 0 12px 0; font-size:16px; color:var(--text-on-dark); }
 
-        .saved-voicings-container{ display:flex; gap:14px; flex-wrap:wrap; align-items:flex-start; }
+        .saved-voicings-container{
+            display:flex;
+            gap:14px;
+            flex-wrap:wrap;
+            align-items:flex-start;
+            justify-content:center;
+        }
+
+        /* Improved saved voicing card sizing and responsive mini-fretboard */
         .saved-voicing-item{
-            width:200px;
+            flex: 0 1 260px;
+            min-width:180px;
+            max-width:280px;
             border-radius:12px;
             background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-            padding:20px;
+            padding:16px;
             display:flex;
             flex-direction:column;
             align-items:center;
             box-shadow: 0 10px 30px rgba(2,6,18,0.5);
             border:1px solid rgba(255,255,255,0.02);
             transition: transform var(--transition), box-shadow var(--transition);
+            box-sizing: border-box;
+            overflow: hidden;
         }
         .saved-voicing-item:hover{ transform:translateY(-6px); box-shadow: 0 18px 48px rgba(2,6,18,0.6); }
         .saved-voicing-label{
             font-weight:800;
             color:var(--accent-1);
-            margin-bottom:6px;
-            font-size:13px;
+            margin-bottom:8px;
+            font-size:14px;
             text-transform:uppercase;
             letter-spacing:0.6px;
+            display:block;
+            width:100%;
+            text-align:center;
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
         }
-        .saved-voicing-item svg{ width:200px; height:100px; margin-bottom:8px; display:block; }
-        .saved-remove-btn{ background:var(--danger); color:#fff; border:0; padding:6px 8px; border-radius:8px; cursor:pointer; font-weight:800; }
+        .saved-voicing-item svg{ width:100%; height:120px; margin-bottom:8px; display:block; }
+        .saved-remove-btn{ background:var(--danger); color:#fff; border:0; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:800; }
+
          .empty-state {
             display: none; /* Hidden by default */
             flex-direction: column;
@@ -298,10 +317,10 @@
             .current-voicing{
                 flex-direction:column;
                 gap:12px;
-                align-items:stretch;
+                align-items:center;
             }
             .note-square{
-                width:100%;
+                width:80%;
                 height:56px;
                 min-width:unset;
                 font-size:18px;
@@ -728,18 +747,35 @@
             targetSVG.innerHTML = '';
 
             if (!numFrets || numFrets <= 0) numFrets = NUM_FRETS;
-            // compute dimensions based on fixed fret width
-            const fretWidthPx = OPTIMAL_FRET_WIDTH;
-            const FRETBOARD_WIDTH = fretWidthPx * numFrets;
+            // compute dimensions based on available svg client size and desired optimal width
+            const isMainLocal = (targetSVG === fretboardSVG);
+
             const VIEWBOX_PADDING = SVG_HORIZONTAL_PADDING; // total left+right padding inside viewBox
+            // If we have a client width (mini svgs or responsive), use it to pick a suitable fret width
+            const clientW = targetSVG.clientWidth || (isMainLocal ? Math.min(window.innerWidth - 120, OPTIMAL_FRET_WIDTH * numFrets) : 300);
+            // desired per-fret width based on available width, clamped to a readable range
+            let fretWidthCandidate = Math.max(16, (clientW - VIEWBOX_PADDING) / Math.max(1, numFrets));
+            let fretWidthPx = isMainLocal ? OPTIMAL_FRET_WIDTH : Math.min(OPTIMAL_FRET_WIDTH, Math.max(16, fretWidthCandidate));
+            // For main fretboard we want the optimal width but if the viewport is narrow reduce it
+            if (isMainLocal && clientW < OPTIMAL_FRET_WIDTH * numFrets) {
+                fretWidthPx = Math.max(20, (clientW - VIEWBOX_PADDING) / Math.max(1, numFrets));
+            }
+
+            const FRETBOARD_WIDTH = fretWidthPx * numFrets;
             const viewBoxWidth = FRETBOARD_WIDTH + VIEWBOX_PADDING;
             const viewBoxHeight = targetSVG.clientHeight && !isNaN(targetSVG.clientHeight) ? targetSVG.clientHeight : DEFAULT_SVG_HEIGHT;
 
-            // set viewBox and explicit svg size (svg width will be used for desktop where there's room,
-            // max-width:100% in CSS prevents overflow on small screens and will scale down the svg if needed)
+            // set viewBox and explicit svg size
             targetSVG.setAttribute('viewBox', `0 0 ${viewBoxWidth} ${viewBoxHeight}`);
-            targetSVG.style.width = `${viewBoxWidth}px`;
-            targetSVG.style.height = `${viewBoxHeight}px`;
+            if (isMainLocal) {
+                // for main fretboard, allow wide layout but keep it bounded
+                targetSVG.style.width = `${Math.min(viewBoxWidth, Math.max(360, Math.min(window.innerWidth - 80, viewBoxWidth)))}px`;
+                targetSVG.style.height = `${viewBoxHeight}px`;
+            } else {
+                // for mini svgs, make them fluid to card width and set explicit height for consistent rendering
+                targetSVG.style.width = '100%';
+                targetSVG.style.height = `${viewBoxHeight}px`;
+            }
 
             const FRETBOARD_START_X = VIEWBOX_PADDING / 2;
             const FRETBOARD_START_Y = 20;
@@ -759,8 +795,9 @@
                 const x = FRETBOARD_START_X + i * FRET_WIDTH;
                 targetSVG.innerHTML += `<line x1="${x}" y1="${FRETBOARD_START_Y}" x2="${x}" y2="${FRETBOARD_START_Y + (NUM_STRINGS - 1) * STRING_HEIGHT}" stroke="rgba(255,255,255,0.7)" stroke-width="1.2" class="fret-line" />`;
                 const fretNumber = startFret + i;
-                 if (fretNumber >= 0 && i > 0) { 
-                    targetSVG.innerHTML += `<text x="${x - FRET_WIDTH / 2}" y="${FRETBOARD_START_Y + (NUM_STRINGS - 1) * STRING_HEIGHT + noteRadius * yOffsetMultiplier}" font-size="${fretFontSize}" text-anchor="middle" fill="rgba(255,255,255,0.75)">${fretNumber}</text>`;
+                if (fretNumber >= 0 && i > 0) {
+                    const labelY = FRETBOARD_START_Y + (NUM_STRINGS - 1) * STRING_HEIGHT + noteRadius * yOffsetMultiplier;
+                    targetSVG.innerHTML += `<text x="${x - FRET_WIDTH / 2}" y="${labelY}" font-size="${fretFontSize}" text-anchor="middle" fill="rgba(255,255,255,0.75)">${fretNumber}</text>`;
                 }
             }
         }
@@ -812,29 +849,34 @@
                 if (startFret + numFretsToDisplay > NUM_FRETS) numFretsToDisplay = Math.max(1, NUM_FRETS - startFret);
             }
 
-            // Draw fretboard using fixed fret width calculation
-            drawFretboard(targetSVG, startFret, numFretsToDisplay, BASE_NOTE_RADIUS, BASE_NOTE_FONT_SIZE * 0.7, BASE_NOTE_FONT_SIZE * 0.9, isMain ? 1.5 : 2.3);
+            // Draw fretboard using fixed fret width calculation (adaptive for mini svgs)
+            // Provide slightly larger font for main and compact for minis
+            const noteRadius = BASE_NOTE_RADIUS;
+            const noteFontSize = isMain ? BASE_NOTE_FONT_SIZE * 0.8 : BASE_NOTE_FONT_SIZE * 0.65;
+            const fretFontSize = isMain ? BASE_NOTE_FONT_SIZE * 0.85 : BASE_NOTE_FONT_SIZE * 0.6;
+            drawFretboard(targetSVG, startFret, numFretsToDisplay, noteRadius, noteFontSize, fretFontSize, isMain ? 1.5 : 2.0);
 
             // Now position note markers relative to the same fixed sizing
             const viewBoxString = targetSVG.getAttribute('viewBox') || `0 0 ${targetSVG.clientWidth || 1000} ${targetSVG.clientHeight || DEFAULT_SVG_HEIGHT}`;
             const [, , viewBoxWidth, viewBoxHeight] = viewBoxString.split(' ').map(Number);
-            const FRETBOARD_WIDTH = (numFretsToDisplay * OPTIMAL_FRET_WIDTH);
+            const FRETBOARD_WIDTH = (numFretsToDisplay * OPTIMAL_FRET_WIDTH); // approximate; actual position uses computation below
             const FRETBOARD_START_X = SVG_HORIZONTAL_PADDING / 2;
             const FRETBOARD_START_Y = 20;
             const FRETBOARD_HEIGHT = Math.max(60, viewBoxHeight - 40);
-            const FRET_WIDTH = OPTIMAL_FRET_WIDTH;
+            // Recompute effective fret width from viewBox (keeps layout consistent)
+            const effectiveFretWidth = (viewBoxWidth - SVG_HORIZONTAL_PADDING) / Math.max(1, numFretsToDisplay);
             const STRING_HEIGHT = FRETBOARD_HEIGHT / (NUM_STRINGS - 1);
 
             voicing.forEach(notePos=>{
                 const string = notePos.string; const fret = Math.max(0, Number(notePos.fret || 0));
                 const noteName = notePos.originalNote || notePos.note;
                 if (fret >= startFret && fret < startFret + numFretsToDisplay) {
-                    const x = FRETBOARD_START_X + (fret - startFret) * FRET_WIDTH + FRET_WIDTH / 2;
+                    const x = FRETBOARD_START_X + (fret - startFret) * effectiveFretWidth + effectiveFretWidth / 2;
                     const y = FRETBOARD_START_Y + (string - 1) * STRING_HEIGHT;
-                    const noteRadius = BASE_NOTE_RADIUS;
-                    const noteFontSize = BASE_NOTE_FONT_SIZE * 0.8;
-                    targetSVG.innerHTML += `<circle cx="${x}" cy="${y}" r="${noteRadius}" fill="#f8fafc" stroke="rgba(0,0,0,0.06)" stroke-width="1.2" class="note-circle" />`;
-                    targetSVG.innerHTML += `<text x="${x}" y="${y}" text-anchor="middle" alignment-baseline="central" font-size="${noteFontSize}" fill="#0b1220" class="note-text" font-weight="700">${noteName}</text>`;
+                    const r = isMain ? BASE_NOTE_RADIUS : Math.max(7, BASE_NOTE_RADIUS * 0.7);
+                    const nf = isMain ? BASE_NOTE_FONT_SIZE * 0.8 : BASE_NOTE_FONT_SIZE * 0.58;
+                    targetSVG.innerHTML += `<circle cx="${x}" cy="${y}" r="${r}" fill="#f8fafc" stroke="rgba(0,0,0,0.06)" stroke-width="1.2" class="note-circle" />`;
+                    targetSVG.innerHTML += `<text x="${x}" y="${y}" text-anchor="middle" alignment-baseline="central" font-size="${nf}" fill="#0b1220" class="note-text" font-weight="700">${noteName}</text>`;
                 }
             });
         }
@@ -919,17 +961,43 @@ function displayCurrentVoicing() {
             storeVoicingButton.textContent = "Saved!"; setTimeout(()=> storeVoicingButton.textContent = "Store Position",1300);
         }
         function deleteVoicing(id){ let s=loadSavedVoicings(); s=s.filter(x=>x.id!==id); localStorage.setItem('savedGuitarVoicings', JSON.stringify(s)); renderSavedVoicings(); }
+
         function renderSavedVoicings(){
             savedVoicingsContainer.innerHTML=''; const saved = loadSavedVoicings();
+            if(!saved || saved.length===0){
+                savedVoicingsContainer.innerHTML = `<div style="width:100%;display:flex;align-items:center;justify-content:center;color:var(--muted);padding:14px">No saved voicings yet</div>`;
+                return;
+            }
+
             saved.forEach(item=>{
                 const div = document.createElement('div');
                 div.className='saved-voicing-item';
-                div.innerHTML = `<span class="saved-voicing-label">${item.label.replace(/-/g,'•')}</span>`;
+                div.innerHTML = `<span class="saved-voicing-label" title="${item.label}">${item.label.replace(/-/g,'•')}</span>`;
                 const mini = document.createElementNS("http://www.w3.org/2000/svg","svg");
                 mini.setAttribute('preserveAspectRatio','xMidYMid meet');
-                mini.setAttribute('viewBox','0 0 350 150');
+                // set an initial viewBox - drawFretboard will override with correct sizing
+                mini.setAttribute('viewBox','0 0 400 150');
+                // fixed visual height for mini boards for consistent layout
+                mini.style.width = '100%';
+                mini.style.height = '120px';
+                mini.style.display = 'block';
                 div.appendChild(mini);
-                drawVoicing(mini, item.voicing); // mini will auto-use a compact window
+
+                // compute a compact window for the mini board based on the voicing frets
+                const frets = item.voicing.map(v=>Math.max(0, Number(v.fret || 0)));
+                let minF = frets.length ? Math.min(...frets) : 0;
+                let maxF = frets.length ? Math.max(...frets) : Math.min(5, NUM_FRETS);
+                // add a little breathing room
+                minF = Math.max(0, minF - 1);
+                maxF = Math.min(NUM_FRETS, maxF + 1);
+                const span = Math.max(1, maxF - minF);
+                // choose numFrets for mini - keep compact between 4 and 8
+                const numFrets = Math.min(8, Math.max(4, span + 2));
+                const startFret = Math.max(0, minF);
+
+                // Draw mini with computed window so it stays compact and legible
+                drawVoicing(mini, item.voicing, startFret, numFrets);
+
                 const del = document.createElement('button'); del.textContent='Remove'; del.className='saved-remove-btn';
                 del.addEventListener('click', ()=> deleteVoicing(item.id));
                 div.appendChild(del);
@@ -938,12 +1006,8 @@ function displayCurrentVoicing() {
         }
 
         // Events
-        findVoicingStrictButton.addEventListener('click', ()=>{
-            allVoicings = findAndFilterVoicingsStrict(); currentVoicingIndex = 0; displayCurrentVoicing();
-        });
-        findVoicingFlexibleButton.addEventListener('click', ()=>{
-            allVoicings = findAndFilterVoicingsFlexible(); currentVoicingIndex = 0; displayCurrentVoicing();
-        });
+        findVoicingStrictButton.addEventListener('click', ()=>{ allVoicings = findAndFilterVoicingsStrict(); currentVoicingIndex = 0; displayCurrentVoicing(); });
+        findVoicingFlexibleButton.addEventListener('click', ()=>{ allVoicings = findAndFilterVoicingsFlexible(); currentVoicingIndex = 0; displayCurrentVoicing(); });
         storeVoicingButton.addEventListener('click', ()=> { if (allVoicings.length>0) saveVoicing(allVoicings[currentVoicingIndex]); });
         prevButton.addEventListener('click', ()=> { if (currentVoicingIndex>0) { currentVoicingIndex--; displayCurrentVoicing(); } });
         nextButton.addEventListener('click', ()=> { if (currentVoicingIndex < allVoicings.length-1) { currentVoicingIndex++; displayCurrentVoicing(); } });

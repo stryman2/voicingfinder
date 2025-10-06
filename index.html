@@ -154,6 +154,7 @@
             transition: transform var(--transition), box-shadow var(--transition);
             outline:none;
             text-align:center;
+            font-family: inherit; /* keep same font */
         }
         .note-square::placeholder{ color:#9aa4b2; font-weight:800; }
 
@@ -197,8 +198,20 @@
         }
         #find-voicing-strict{ background: linear-gradient(90deg,var(--accent-1), var(--accent-2)); color:#042427; }
         #find-voicing-flexible{ background: linear-gradient(90deg,var(--accent-2), var(--accent-3)); color:#061222; }
-        #play-voicing-button{ background: linear-gradient(90deg,#ff9a8b,#ff6a88); }
-        #store-voicing-button{ background: linear-gradient(90deg,#8b7cff,#6b52f9); }
+        #play-voicing-button{ background: linear-gradient(90deg,#ff9a8b,#ff6a88); color:#000; }
+        #store-voicing-button{ background: linear-gradient(90deg,#8b7cff,#6b52f9); color:#000; }
+        /* Ensure Play / Store buttons use black text for contrast */
+        #play-voicing-button,
+        #store-voicing-button {
+            color: #000 !important;
+            text-shadow: none !important; /* remove any pale text-shadow that reduces contrast */
+        }
+
+        /* Ensure the icon inside the button is also black */
+        #play-voicing-button i,
+        #store-voicing-button i {
+            color: #000 !important;
+        }
 
         .button-container button:hover{ transform:translateY(-4px); filter:brightness(1.04); }
 
@@ -299,6 +312,7 @@
         }
 
         @media (max-width: 768px){
+            
             /* --- Mobile layout tuned for ~390px (iPhone 12) --- */
             html, body {
                 padding-left: 12px;
@@ -406,6 +420,13 @@
             /* ensure mini svgs scale within cards */
             .saved-voicing-item svg { max-width: 100%; height: auto; }
 
+            /* Mobile placeholder style: lighter weight and subdued color */
+            .note-square::placeholder {
+                font-weight: 500 !important;
+                color: rgba(11,18,32,0.85) !important;
+                opacity: 0.9 !important;
+            }
+            .note-square.placeholder-active { opacity: 0.6; }
         }
 
         /* subtle animated micro-element to sell premium quality */
@@ -423,6 +444,28 @@
             0%{ background-position:0% 50%;}
             50%{ background-position:100% 50%;}
             100%{ background-position:0% 50%;}
+        }
+
+        /* voicing info panel */
+        .voicing-info{
+            margin-top:12px;
+            width:100%;
+            border-radius:8px;
+            padding:12px 14px;
+            background: rgba(4,8,12,0.55);
+            border: 2px solid rgba(64,200,145,0.18);
+            color: var(--text-on-dark);
+            box-shadow: 0 8px 24px rgba(2,6,18,0.45);
+            font-size:13px;
+            line-height:1.4;
+            max-width:100%;
+        }
+        .voicing-info .label{ font-weight:800; color:var(--accent-2); margin-right:8px; }
+        .voicing-info .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Segoe UI Mono", monospace; color:#e6f7ef; }
+        .voicing-info .row{ margin-bottom:6px; }
+        .voicing-info .dismiss{ float:right; background:transparent;border:0;color:var(--muted);cursor:pointer;font-weight:700;font-size:14px; }
+        @media (max-width:768px){
+            .voicing-info{ font-size:12px; padding:10px; border-radius:10px; }
         }
     </style>
 </head>
@@ -557,6 +600,7 @@
         <p>Enter notes above and click 'Next Chord' or 'Strict Search' to begin.</p>
     </div>
             <svg id="fretboard-diagram" aria-hidden="false"></svg>
+            <div id="voicing-info" class="voicing-info" aria-live="polite" hidden></div>
             <div class="output-controls" role="toolbar">
                 <button id="prev-option" title="Previous position" style="height:44px;border-radius:10px;padding:8px 12px;background:rgba(255,255,255,0.03);border:0;color:var(--text-on-dark);cursor:pointer;"><i class="fa-solid fa-chevron-left"></i></button>
                 <div id="option-number">Enter notes to search</div>
@@ -575,8 +619,33 @@
     <script>
     // Combined Voicing Finder + Voice Leading Predictor
     document.addEventListener('DOMContentLoaded', () => {
+        
         // UI references
         const noteInputs = ['note1','note2','note3','note4'].map(id => document.getElementById(id));
+         (function(){
+    const originalPlaceholders = noteInputs.map(el => el ? (el.getAttribute('placeholder')||'') : '');
+    function updatePlaceholdersForMobile(){
+        const isMobile = window.innerWidth <= 768;
+        noteInputs.forEach((el,i)=>{
+            if(!el) return;
+            if(isMobile){
+                const ph = (i < 3) ? `Note ${i+1}` : `Note ${i+1} (opt)`;
+                el.setAttribute('placeholder', ph);
+                el.style.opacity = el.value ? '' : '0.95'; // reduced opacity when empty
+            } else {
+                el.setAttribute('placeholder', originalPlaceholders[i] || '');
+                el.style.opacity = '';
+            }
+        });
+    }
+    window.addEventListener('resize', updatePlaceholdersForMobile);
+    updatePlaceholdersForMobile();
+    noteInputs.forEach(el=>{
+        if(!el) return;
+        el.addEventListener('input', ()=>{ if(window.innerWidth <= 768) el.style.opacity = el.value ? '' : '0.95'; });
+    });
+})();
+
         const minFretInput = document.getElementById('minFret');
         const maxFretInput = document.getElementById('maxFret');
         const minStringInput = document.getElementById('minString');
@@ -595,6 +664,8 @@
         const savedVoicingsContainer = document.getElementById('saved-voicings-container');
         const prevButton = document.getElementById('prev-option');
         const nextButton = document.getElementById('next-option');
+
+        const voicingInfoBox = document.getElementById('voicing-info');
 
         const vlIntervalInput = document.getElementById('vlInterval');
         const vlDirButtons = [document.getElementById('vlDown'), document.getElementById('vlNeutral'), document.getElementById('vlUp')];
@@ -881,6 +952,34 @@
             });
         }
 
+        // --- Voicing info utilities ---
+        function formatPcNames(pcs){
+            if(!pcs || pcs.length===0) return '';
+            return pcs.map(p=>{
+                if(typeof p === 'number') return vl_nameFromPc(p);
+                return String(p);
+            }).join(', ');
+        }
+
+        function updateVoicingInfo({ title=null, targetDegree=null, targetChordPcs=null, autoFrozen=null, predictedVoicing=null, currentVoicing=null } = {}) {
+            if(!voicingInfoBox) return;
+            const parts = [];
+            if(title) parts.push(`<div class="row"><strong class="label">${title}</strong></div>`);
+            if(targetDegree !== null) parts.push(`<div class="row"><span class="label">Target degree:</span> <span class="mono">${targetDegree}</span></div>`);
+            if(targetChordPcs) parts.push(`<div class="row"><span class="label">Target chord tones:</span> <span class="mono">${formatPcNames(targetChordPcs)}</span></div>`);
+            if(autoFrozen && autoFrozen.length) parts.push(`<div class="row"><span class="label">Auto‑Frozen Tones:</span> <span class="mono">${formatPcNames(autoFrozen)}</span></div>`);
+            if(predictedVoicing) parts.push(`<div class="row"><span class="label">Predicted Voicing (V1..):</span> <span class="mono">${predictedVoicing.join(', ')}</span></div>`);
+            if(currentVoicing) {
+                const notes = currentVoicing.map(n => n.originalNote || n.note || `${n.fret}@${n.string}`);
+                parts.push(`<div class="row"><span class="label">Current voicing:</span> <span class="mono">${notes.join(', ')}</span></div>`);
+            }
+            if(parts.length === 0){ voicingInfoBox.hidden = true; voicingInfoBox.innerHTML = ''; return; }
+            voicingInfoBox.innerHTML = parts.join('') + `<button class="dismiss" aria-label="Dismiss info" title="Dismiss" onclick="this.parentNode.hidden=true">×</button>`;
+            voicingInfoBox.hidden = false;
+        }
+
+        function clearVoicingInfo(){ updateVoicingInfo(); }
+
 function displayCurrentVoicing() {
     const emptyState = document.getElementById('empty-state-placeholder');
     const fretboard = document.getElementById('fretboard-diagram');
@@ -901,6 +1000,11 @@ function displayCurrentVoicing() {
         nextButton.disabled = currentVoicingIndex >= allVoicings.length - 1;
         [playVoicingButton, storeVoicingButton].forEach(b => b.disabled = false);
 
+        // Update info panel: identify chord from visible input notes and show current voicing
+        const chordId = vl_identifyChord(noteInputs.map(n=>n.value));
+        const title = chordId ? `${chordId.root} ${chordId.type}` : 'Voicing';
+        updateVoicingInfo({ title, currentVoicing: voicing, targetChordPcs: chordId ? chordId.notes : null });
+
     } else {
         // --- If there are NO results (The Empty State) ---
         emptyState.style.display = 'flex'; // Show the message
@@ -916,6 +1020,7 @@ function displayCurrentVoicing() {
         }
         
         [prevButton, nextButton, playVoicingButton, storeVoicingButton].forEach(b => b.disabled = true);
+        clearVoicingInfo();
     }
 }
 
@@ -1190,6 +1295,17 @@ function displayCurrentVoicing() {
 
             allVoicings = findAndFilterVoicingsStrict();
             currentVoicingIndex = 0;
+
+            // Update voicing info with prediction details
+            updateVoicingInfo({
+                title: `Predicted: ${chordIdent.root} → degree ${targetDegree}`,
+                targetDegree: `${targetDegree} (${scaleType})`,
+                targetChordPcs: nextChordPcs,
+                autoFrozen: Array.from(combinedFrozenSet),
+                predictedVoicing: finalNames,
+                currentVoicing: allVoicings && allVoicings.length ? allVoicings[0] : null
+            });
+
             if(allVoicings.length===0){
                 optionNumberElement.textContent = `Predicted: ${finalNames.join(', ')} — No strict voicings found`;
             } else {

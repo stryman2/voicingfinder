@@ -58,22 +58,119 @@
             overflow:visible;
         }
 
-        /* top-right theme toggle */
-        #theme-toggle{
+        /* theme toggle removed */
+
+        /* Help button (top-left) */
+        #help-button{
             position:absolute;
-            right:18px;
             top:18px;
-            width:44px;
-            height:44px;
-            border-radius:12px;
-            background:linear-gradient(180deg,#111827,#0b1220);
-            display:grid;
+            left:18px;
+            width:40px;
+            height:40px;
+            border-radius:10px;
+            border:0;
+            background:linear-gradient(180deg,#2b2f36,#1b1f24);
+            color:var(--text-on-dark);
+            display:inline-grid;
             place-items:center;
-            border:1px solid rgba(255,255,255,0.04);
             cursor:pointer;
-            transition:transform var(--transition);
+            font-size:16px;
+            transition:all var(--transition);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+            z-index:20;
         }
-        #theme-toggle:hover{ transform:translateY(-3px); }
+        #help-button:hover{ transform:translateY(-3px); }
+
+        /* Help modal overlay + content */
+        #help-modal-overlay{
+            position:fixed;
+            inset:0;
+            background:rgba(2,6,12,0.6);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            opacity:0;
+            visibility:hidden;
+            transition:opacity 220ms ease, visibility 220ms ease;
+            z-index:9999;
+            -webkit-backdrop-filter: blur(6px);
+            backdrop-filter: blur(6px);
+        }
+        #help-modal-overlay.open{ opacity:1; visibility:visible; }
+
+        #help-modal-content{
+            position:relative;
+            width: min(760px, 92%);
+            max-height: 86vh;
+            overflow:auto;
+            background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+            border:1px solid rgba(255,255,255,0.06);
+            padding:20px 22px;
+            border-radius:14px;
+            color:var(--text-on-dark);
+            box-shadow: 0 20px 60px rgba(2,6,18,0.6);
+            transform: scale(0.98);
+            transition: transform 260ms cubic-bezier(.2,.9,.2,1), opacity 220ms ease;
+            opacity:0;
+        }
+        #help-modal-overlay.open #help-modal-content{ transform: scale(1); opacity:1; }
+
+        .help-close{
+            position:absolute;
+            top:12px;
+            right:14px;
+            background:transparent;
+            border:0;
+            color:var(--muted);
+            font-size:22px;
+            cursor:pointer;
+        }
+        #help-modal-content h2{ margin-top:6px; margin-bottom:6px; }
+        #help-modal-content p{ color:var(--muted); line-height:1.5; }
+        #help-modal-content ul{ margin:8px 0 12px 18px; color:var(--muted); line-height:1.4; }
+
+        /* Mobile: transform help button into a floating action button (FAB) on the bottom-right
+           This avoids overlapping the logo and gives a clear touch target. A small inline label
+           appears while the modal is open or on hover/focus. */
+        @media (max-width: 768px){
+            #help-button{
+                position:fixed;
+                left:auto;
+                right:18px;
+                bottom:18px;
+                top:auto;
+                width:56px;
+                height:56px;
+                border-radius:28px;
+                font-size:20px;
+                box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+                z-index:10001;
+                background: linear-gradient(180deg,#1f2430,#13161a);
+            }
+
+            /* subtle pulse to draw attention on first use */
+            @keyframes help-pulse { 0% { box-shadow: 0 6px 14px rgba(0,0,0,0.3); transform: scale(1); } 50% { box-shadow: 0 18px 38px rgba(56,189,248,0.08); transform: scale(1.03); } 100% { box-shadow: 0 6px 14px rgba(0,0,0,0.3); transform: scale(1); } }
+            #help-button.pulse { animation: help-pulse 2200ms ease-in-out infinite; }
+
+            /* inline label that shows on hover/focus or while modal is open */
+            #help-button::after{
+                content: 'Help';
+                position:absolute;
+                right:72px;
+                top:50%;
+                transform:translateY(-50%);
+                background: rgba(2,6,12,0.75);
+                color: var(--text-on-dark);
+                padding:8px 10px;
+                border-radius:10px;
+                font-weight:700;
+                white-space:nowrap;
+                display:none;
+                box-shadow: 0 8px 24px rgba(2,6,18,0.5);
+                font-size:14px;
+            }
+            #help-button:focus::after, #help-button:hover::after, #help-button.open-label::after { display:block; }
+        }
 
         /* header logo */
         .logo-container{ display:flex; align-items:center; gap:2px; justify-content:center; margin-bottom:18px; }
@@ -471,7 +568,8 @@
 </head>
 <body>
     <div class="container">
-        <button id="theme-toggle" aria-label="Toggle theme"><i class="fa-solid fa-sun"></i></button>
+
+         <button id="help-button" title="Help / Instructions" aria-label="Help"><i class="fa-solid fa-question"></i></button>
 
        <div class="logo-container">
           <svg width="70" height="70" viewBox="0 0 80 80" aria-hidden="true">
@@ -616,6 +714,33 @@
         </div>
     </div>
 
+    <!-- Help modal -->
+    <div id="help-modal-overlay" aria-hidden="true">
+        <div id="help-modal-content" role="dialog" aria-modal="true" aria-labelledby="help-modal-title">
+            <button class="help-close" aria-label="Close help">&times;</button>
+            <h2 id="help-modal-title">Welcome to Voicing Finder!</h2>
+            <p>This app is a creative partner that helps you discover new possibilities on the guitar. It does two main things: finds every possible way to play a chord, and predicts the perfect next chord in a harmonic progression.</p>
+
+            <h3>🎸 How to Find a Chord Voicing?</h3>
+            <ul>
+                <li>Enter 3 or 4 notes of a chord into the large white boxes.</li>
+                <li>Click <strong>Strict Search</strong>. The app will find all positions where the notes appear on the guitar in the order you entered them (from the lowest string to the highest).</li>
+                <li>Click <strong>Flexible Search</strong> to find all possible positions, regardless of the note order.</li>
+                <li>Browse through the results with the arrow buttons (&lt; &gt;) to see all the options on the fretboard.</li>
+            </ul>
+
+            <h3>✨ How to Predict the Next Chord?</h3>
+            <ul>
+                <li>Set the "rules of the game" in the top controls: Scale, Cycle (the harmonic progression), and Direction (the voice-leading direction).</li>
+                <li>Enter the four notes of the starting chord into the white boxes.</li>
+                <li>Click the <strong>Next Chord (▶)</strong> button.</li>
+                <li>The app will calculate the next chord in the sequence, update the note boxes, and automatically show you the positions for it on the fretboard.</li>
+            </ul>
+
+            <p>That's it! We recommend just starting to experiment. Enjoy!</p>
+        </div>
+    </div>
+
     <script>
     // Combined Voicing Finder + Voice Leading Predictor
     document.addEventListener('DOMContentLoaded', () => {
@@ -687,8 +812,11 @@
         setActiveDirection(-1);
 
         // --- Voicing Finder data & functions ---
-        let allVoicings = [];
+    let allVoicings = [];
         let currentVoicingIndex = 0;
+    // History stack for Next/Previous (undo) behavior: stores arrays of input note values
+    const predictHistory = [];
+    const MAX_HISTORY = 100;
         const NUM_FRETS = 24;
         const NUM_STRINGS = 6;
         const MAX_FRET_SPAN = 5;
@@ -1254,6 +1382,9 @@ function displayCurrentVoicing() {
         }
 
         function runPredict(harmonicDirection){
+            // Capture current inputs; we'll push to history only if prediction proceeds successfully
+            const prePredictSnapshot = noteInputs.map(n => n.value || '');
+
             const scaleRoot = scaleRootEl.value || 'C';
             const scaleType = (scaleTypeEl.value || 'major').toLowerCase();
             const cycleVal = parseInt(cycleEl.value,10) || 1;
@@ -1265,6 +1396,20 @@ function displayCurrentVoicing() {
             if(!chordIdent){
                 optionNumberElement.textContent = 'Error: cannot identify current chord.';
                 return;
+            }
+
+            // Only now that we have a valid prediction, record the previous inputs when this is a forward (Next) action
+            if (harmonicDirection === 1) {
+                try {
+                    const hasValue = prePredictSnapshot.some(v => v && String(v).trim() !== '');
+                    const last = predictHistory.length ? predictHistory[predictHistory.length - 1] : null;
+                    const isDuplicate = last && JSON.stringify(last) === JSON.stringify(prePredictSnapshot);
+                    if (hasValue && !isDuplicate) {
+                        predictHistory.push(prePredictSnapshot);
+                        if (predictHistory.length > MAX_HISTORY) predictHistory.shift();
+                        if (predictPrevBtn) predictPrevBtn.disabled = false;
+                    }
+                } catch (e) { /* ignore history errors */ }
             }
 
             const scale = vl_getScale(scaleRoot, scaleType);
@@ -1313,8 +1458,32 @@ function displayCurrentVoicing() {
             }
         }
 
+        // Next: perform prediction and push the current inputs onto the history stack so we can undo
         if(predictNextBtn) predictNextBtn.addEventListener('click', ()=> runPredict(1));
-        if(predictPrevBtn) predictPrevBtn.addEventListener('click', ()=> runPredict(-1));
+
+        // Previous: act as a Back/Undo button. Restore the last inputs from history and run a Strict Search
+        function restorePreviousInputs() {
+            if(predictHistory.length === 0) {
+                // nothing to restore
+                predictPrevBtn.disabled = true;
+                optionNumberElement.textContent = 'No previous chord in history';
+                return;
+            }
+            const last = predictHistory.pop();
+            setNoteInputsFromArray(last);
+            // After restoring inputs, run strict search to update voicings & fretboard
+            allVoicings = findAndFilterVoicingsStrict();
+            currentVoicingIndex = 0;
+            displayCurrentVoicing();
+            predictPrevBtn.disabled = predictHistory.length === 0;
+            optionNumberElement.textContent = 'Restored previous chord';
+        }
+
+        if(predictPrevBtn) {
+            predictPrevBtn.addEventListener('click', restorePreviousInputs);
+            // initially disabled until there's history
+            predictPrevBtn.disabled = true;
+        }
 
         // normalize note inputs on blur
         noteInputs.forEach(el=>{
@@ -1347,17 +1516,36 @@ function displayCurrentVoicing() {
         window.addEventListener('resize', adjustCvNavForMobile);
         adjustCvNavForMobile();
 
-        // Theme toggle
-        const themeToggleBtn = document.getElementById('theme-toggle');
-        const themeIcon = themeToggleBtn.querySelector('i');
-        themeToggleBtn.addEventListener('click', ()=>{
-            if(document.body.classList.contains('light-theme')){ document.body.classList.remove('light-theme'); themeIcon.classList.replace('fa-moon','fa-sun'); localStorage.setItem('theme','dark-theme'); }
-            else { document.body.classList.add('light-theme'); themeIcon.classList.replace('fa-sun','fa-moon'); localStorage.setItem('theme','light-theme'); }
-            displayCurrentVoicing(); renderSavedVoicings();
-        });
+        // Help / Instructions modal logic
+        const helpButton = document.getElementById('help-button');
+        const helpOverlay = document.getElementById('help-modal-overlay');
+        const helpContent = document.getElementById('help-modal-content');
+        const helpClose = helpContent ? helpContent.querySelector('.help-close') : null;
 
-        const savedTheme = localStorage.getItem('theme');
-        if(savedTheme === 'light-theme'){ document.body.classList.add('light-theme'); themeIcon.classList.replace('fa-sun','fa-moon'); }
+        function openHelpModal(){
+            if(!helpOverlay) return;
+            helpOverlay.classList.add('open');
+            helpOverlay.setAttribute('aria-hidden','false');
+            // trap focus briefly (move to dialog)
+            if(helpContent) helpContent.focus();
+            // Mobile UX: show inline label and stop pulse after first open
+            if(helpButton){ helpButton.classList.add('open-label'); helpButton.classList.remove('pulse'); }
+        }
+        function closeHelpModal(){
+            if(!helpOverlay) return;
+            helpOverlay.classList.remove('open');
+            helpOverlay.setAttribute('aria-hidden','true');
+            if(helpButton) helpButton.focus();
+            if(helpButton) helpButton.classList.remove('open-label');
+        }
+
+        if(helpButton) helpButton.addEventListener('click', ()=>{
+            if(helpOverlay && helpOverlay.classList.contains('open')) closeHelpModal(); else openHelpModal();
+        });
+        if(helpClose) helpClose.addEventListener('click', closeHelpModal);
+        if(helpOverlay) helpOverlay.addEventListener('click', (ev)=>{ if(ev.target === helpOverlay) closeHelpModal(); });
+        // close on Escape
+        window.addEventListener('keydown', (ev)=>{ if(ev.key === 'Escape') closeHelpModal(); });
 
         optionNumberElement.textContent = 'Ready. Use Strict Search or Next Chord.';
     });

@@ -830,19 +830,175 @@
         const DEFAULT_SVG_HEIGHT = 150; // default viewBox height used for drawing calculations
 
         const noteToFretStringMap = {
-            'E': [{ fret: -1, string: 6, note: 'E' },{ fret: 6, string:5, note:'E' },{fret:1,string:4,note:'E'},{fret:8,string:3,note:'E'},{fret:4,string:2,note:'E'},{fret:-1,string:1,note:'E'},{fret:11,string:6,note:'E'},{fret:13,string:5,note:'E'},{fret:18,string:4,note:'E'},{fret:20,string:3,note:'E'},{fret:16,string:2,note:'E'},{fret:11,string:1,note:'E'}],
-            'F': [{fret:0,string:6,note:'F'},{fret:7,string:5,note:'F'},{fret:2,string:4,note:'F'},{fret:9,string:3,note:'F'},{fret:5,string:2,note:'F'},{fret:0,string:1,note:'F'},{fret:12,string:6,note:'F'},{fret:14,string:5,note:'F'},{fret:19,string:4,note:'F'},{fret:21,string:3,note:'F'},{fret:17,string:2,note:'F'},{fret:12,string:1,note:'F'}],
-            'F#': [{fret:1,string:6,note:'F#'},{fret:8,string:5,note:'F#'},{fret:3,string:4,note:'F#'},{fret:10,string:3,note:'F#'},{fret:6,string:2,note:'F#'},{fret:1,string:1,note:'F#'},{fret:13,string:6,note:'F#'},{fret:15,string:5,note:'F#'},{fret:20,string:4,note:'F#'},{fret:18,string:2,note:'F#'},{fret:13,string:1,note:'F#'}],
-            'G': [{fret:2,string:6,note:'G'},{fret:9,string:5,note:'G'},{fret:4,string:4,note:'G'},{fret:11,string:3,note:'G'},{fret:7,string:2,note:'G'},{fret:2,string:1,note:'G'},{fret:14,string:6,note:'G'},{fret:16,string:5,note:'G'},{fret:21,string:4,note:'G'},{fret:19,string:2,note:'G'},{fret:14,string:1,note:'G'}],
-            'G#': [{fret:3,string:6,note:'G#'},{fret:10,string:5,note:'G#'},{fret:5,string:4,note:'G#'},{fret:12,string:3,note:'G#'},{fret:8,string:2,note:'G#'},{fret:3,string:1,note:'G#'},{fret:15,string:6,note:'G#'},{fret:17,string:5,note:'G#'},{fret:12,string:3,note:'G#'},{fret:20,string:2,note:'G#'},{fret:15,string:1,note:'G#'}],
-            'A': [{fret:4,string:6,note:'A'},{fret:-1,string:5,note:'A'},{fret:6,string:4,note:'A'},{fret:1,string:3,note:'A'},{fret:9,string:2,note:'A'},{fret:4,string:1,note:'A'},{fret:16,string:6,note:'A'},{fret:11,string:5,note:'A'},{fret:13,string:4,note:'A'},{fret:18,string:3,note:'A'},{fret:21,string:2,note:'A'},{fret:16,string:1,note:'A'}],
-            'A#': [{fret:5,string:6,note:'A#'},{fret:0,string:5,note:'A#'},{fret:7,string:4,note:'A#'},{fret:2,string:3,note:'A#'},{fret:10,string:2,note:'A#'},{fret:5,string:1,note:'A#'},{fret:17,string:6,note:'A#'},{fret:12,string:5,note:'A#'},{fret:14,string:4,note:'A#'},{fret:19,string:3,note:'A#'},{fret:22,string:2,note:'A#'},{fret:17,string:1,note:'A#'}],
-            'B': [{fret:6,string:6,note:'B'},{fret:1,string:5,note:'B'},{fret:8,string:4,note:'B'},{fret:3,string:3,note:'B'},{fret:-1,string:2,note:'B'},{fret:6,string:1,note:'B'},{fret:18,string:6,note:'B'},{fret:13,string:5,note:'B'},{fret:15,string:4,note:'B'},{fret:20,string:3,note:'B'},{fret:11,string:2,note:'B'},{fret:18,string:1,note:'B'}],
-            'C': [{fret:7,string:6,note:'C'},{fret:2,string:5,note:'C'},{fret:9,string:4,note:'C'},{fret:4,string:3,note:'C'},{fret:0,string:2,note:'C'},{fret:7,string:1,note:'C'},{fret:19,string:6,note:'C'},{fret:14,string:5,note:'C'},{fret:16,string:4,note:'C'},{fret:21,string:3,note:'C'},{fret:12,string:2,note:'C'},{fret:19,string:1,note:'C'}],
-            'C#': [{fret:8,string:6,note:'C#'},{fret:3,string:5,note:'C#'},{fret:10,string:4,note:'C#'},{fret:5,string:3,note:'C#'},{fret:1,string:2,note:'C#'},{fret:8,string:1,note:'C#'},{fret:20,string:6,note:'C#'},{fret:15,string:5,note:'C#'},{fret:17,string:4,note:'C#'},{fret:22,string:3,note:'C#'},{fret:13,string:2,note:'C#'},{fret:20,string:1,note:'C#'}],
-            'D': [{fret:9,string:6,note:'D'},{fret:4,string:5,note:'D'},{fret:-1,string:4,note:'D'},{fret:6,string:3,note:'D'},{fret:2,string:2,note:'D'},{fret:9,string:1,note:'D'},{fret:21,string:6,note:'D'},{fret:16,string:5,note:'D'},{fret:11,string:4,note:'D'},{fret:18,string:3,note:'D'},{fret:14,string:2,note:'D'},{fret:21,string:1,note:'D'}],
-            'D#': [{fret:10,string:6,note:'D#'},{fret:5,string:5,note:'D#'},{fret:0,string:4,note:'D#'},{fret:7,string:3,note:'D#'},{fret:3,string:2,note:'D#'},{fret:10,string:1,note:'D#'},{fret:22,string:6,note:'D#'},{fret:17,string:5,note:'D#'},{fret:12,string:4,note:'D#'},{fret:19,string:3,note:'D#'},{fret:15,string:2,note:'D#'},{fret:22,string:1,note:'D#'}]
-        };
+    'E': [
+        // String 6 (Low E)
+        { fret: 0, string: 6, note: 'E' }, { fret: 12, string: 6, note: 'E' }, { fret: 24, string: 6, note: 'E' },
+        // String 5
+        { fret: 7, string: 5, note: 'E' }, { fret: 19, string: 5, note: 'E' },
+        // String 4
+        { fret: 2, string: 4, note: 'E' }, { fret: 14, string: 4, note: 'E' },
+        // String 3
+        { fret: 9, string: 3, note: 'E' }, { fret: 21, string: 3, note: 'E' },
+        // String 2
+        { fret: 5, string: 2, note: 'E' }, { fret: 17, string: 2, note: 'E' },
+        // String 1 (High E)
+        { fret: 0, string: 1, note: 'E' }, { fret: 12, string: 1, note: 'E' }, { fret: 24, string: 1, note: 'E' }
+    ],
+    'F': [
+        // String 6
+        { fret: 1, string: 6, note: 'F' }, { fret: 13, string: 6, note: 'F' },
+        // String 5
+        { fret: 8, string: 5, note: 'F' }, { fret: 20, string: 5, note: 'F' },
+        // String 4
+        { fret: 3, string: 4, note: 'F' }, { fret: 15, string: 4, note: 'F' },
+        // String 3
+        { fret: 10, string: 3, note: 'F' }, { fret: 22, string: 3, note: 'F' },
+        // String 2
+        { fret: 6, string: 2, note: 'F' }, { fret: 18, string: 2, note: 'F' },
+        // String 1
+        { fret: 1, string: 1, note: 'F' }, { fret: 13, string: 1, note: 'F' }
+    ],
+    'F#': [
+        // String 6
+        { fret: 2, string: 6, note: 'F#' }, { fret: 14, string: 6, note: 'F#' },
+        // String 5
+        { fret: 9, string: 5, note: 'F#' }, { fret: 21, string: 5, note: 'F#' },
+        // String 4
+        { fret: 4, string: 4, note: 'F#' }, { fret: 16, string: 4, note: 'F#' },
+        // String 3
+        { fret: 11, string: 3, note: 'F#' }, { fret: 23, string: 3, note: 'F#' },
+        // String 2
+        { fret: 7, string: 2, note: 'F#' }, { fret: 19, string: 2, note: 'F#' },
+        // String 1
+        { fret: 2, string: 1, note: 'F#' }, { fret: 14, string: 1, note: 'F#' }
+    ],
+    'G': [
+        // String 6
+        { fret: 3, string: 6, note: 'G' }, { fret: 15, string: 6, note: 'G' },
+        // String 5
+        { fret: 10, string: 5, note: 'G' }, { fret: 22, string: 5, note: 'G' },
+        // String 4
+        { fret: 5, string: 4, note: 'G' }, { fret: 17, string: 4, note: 'G' },
+        // String 3
+        { fret: 0, string: 3, note: 'G' }, { fret: 12, string: 3, note: 'G' }, { fret: 24, string: 3, note: 'G' },
+        // String 2
+        { fret: 8, string: 2, note: 'G' }, { fret: 20, string: 2, note: 'G' },
+        // String 1
+        { fret: 3, string: 1, note: 'G' }, { fret: 15, string: 1, note: 'G' }
+    ],
+    'G#': [
+        // String 6
+        { fret: 4, string: 6, note: 'G#' }, { fret: 16, string: 6, note: 'G#' },
+        // String 5
+        { fret: 11, string: 5, note: 'G#' }, { fret: 23, string: 5, note: 'G#' },
+        // String 4
+        { fret: 6, string: 4, note: 'G#' }, { fret: 18, string: 4, note: 'G#' },
+        // String 3
+        { fret: 1, string: 3, note: 'G#' }, { fret: 13, string: 3, note: 'G#' },
+        // String 2
+        { fret: 9, string: 2, note: 'G#' }, { fret: 21, string: 2, note: 'G#' },
+        // String 1
+        { fret: 4, string: 1, note: 'G#' }, { fret: 16, string: 1, note: 'G#' }
+    ],
+    'A': [
+        // String 6
+        { fret: 5, string: 6, note: 'A' }, { fret: 17, string: 6, note: 'A' },
+        // String 5
+        { fret: 0, string: 5, note: 'A' }, { fret: 12, string: 5, note: 'A' }, { fret: 24, string: 5, note: 'A' },
+        // String 4
+        { fret: 7, string: 4, note: 'A' }, { fret: 19, string: 4, note: 'A' },
+        // String 3
+        { fret: 2, string: 3, note: 'A' }, { fret: 14, string: 3, note: 'A' },
+        // String 2
+        { fret: 10, string: 2, note: 'A' }, { fret: 22, string: 2, note: 'A' },
+        // String 1
+        { fret: 5, string: 1, note: 'A' }, { fret: 17, string: 1, note: 'A' }
+    ],
+    'A#': [
+        // String 6
+        { fret: 6, string: 6, note: 'A#' }, { fret: 18, string: 6, note: 'A#' },
+        // String 5
+        { fret: 1, string: 5, note: 'A#' }, { fret: 13, string: 5, note: 'A#' },
+        // String 4
+        { fret: 8, string: 4, note: 'A#' }, { fret: 20, string: 4, note: 'A#' },
+        // String 3
+        { fret: 3, string: 3, note: 'A#' }, { fret: 15, string: 3, note: 'A#' },
+        // String 2
+        { fret: 11, string: 2, note: 'A#' }, { fret: 23, string: 2, note: 'A#' },
+        // String 1
+        { fret: 6, string: 1, note: 'A#' }, { fret: 18, string: 1, note: 'A#' }
+    ],
+    'B': [
+        // String 6
+        { fret: 7, string: 6, note: 'B' }, { fret: 19, string: 6, note: 'B' },
+        // String 5
+        { fret: 2, string: 5, note: 'B' }, { fret: 14, string: 5, note: 'B' },
+        // String 4
+        { fret: 9, string: 4, note: 'B' }, { fret: 21, string: 4, note: 'B' },
+        // String 3
+        { fret: 4, string: 3, note: 'B' }, { fret: 16, string: 3, note: 'B' },
+        // String 2
+        { fret: 0, string: 2, note: 'B' }, { fret: 12, string: 2, note: 'B' }, { fret: 24, string: 2, note: 'B' },
+        // String 1
+        { fret: 7, string: 1, note: 'B' }, { fret: 19, string: 1, note: 'B' }
+    ],
+    'C': [
+        // String 6
+        { fret: 8, string: 6, note: 'C' }, { fret: 20, string: 6, note: 'C' },
+        // String 5
+        { fret: 3, string: 5, note: 'C' }, { fret: 15, string: 5, note: 'C' },
+        // String 4
+        { fret: 10, string: 4, note: 'C' }, { fret: 22, string: 4, note: 'C' },
+        // String 3
+        { fret: 5, string: 3, note: 'C' }, { fret: 17, string: 3, note: 'C' },
+        // String 2
+        { fret: 1, string: 2, note: 'C' }, { fret: 13, string: 2, note: 'C' },
+        // String 1
+        { fret: 8, string: 1, note: 'C' }, { fret: 20, string: 1, note: 'C' }
+    ],
+    'C#': [
+        // String 6
+        { fret: 9, string: 6, note: 'C#' }, { fret: 21, string: 6, note: 'C#' },
+        // String 5
+        { fret: 4, string: 5, note: 'C#' }, { fret: 16, string: 5, note: 'C#' },
+        // String 4
+        { fret: 11, string: 4, note: 'C#' }, { fret: 23, string: 4, note: 'C#' },
+        // String 3
+        { fret: 6, string: 3, note: 'C#' }, { fret: 18, string: 3, note: 'C#' },
+        // String 2
+        { fret: 2, string: 2, note: 'C#' }, { fret: 14, string: 2, note: 'C#' },
+        // String 1
+        { fret: 9, string: 1, note: 'C#' }, { fret: 21, string: 1, note: 'C#' }
+    ],
+    'D': [
+        // String 6
+        { fret: 10, string: 6, note: 'D' }, { fret: 22, string: 6, note: 'D' },
+        // String 5
+        { fret: 5, string: 5, note: 'D' }, { fret: 17, string: 5, note: 'D' },
+        // String 4
+        { fret: 0, string: 4, note: 'D' }, { fret: 12, string: 4, note: 'D' }, { fret: 24, string: 4, note: 'D' },
+        // String 3
+        { fret: 7, string: 3, note: 'D' }, { fret: 19, string: 3, note: 'D' },
+        // String 2
+        { fret: 3, string: 2, note: 'D' }, { fret: 15, string: 2, note: 'D' },
+        // String 1
+        { fret: 10, string: 1, note: 'D' }, { fret: 22, string: 1, note: 'D' }
+    ],
+    'D#': [
+        // String 6
+        { fret: 11, string: 6, note: 'D#' }, { fret: 23, string: 6, note: 'D#' },
+        // String 5
+        { fret: 6, string: 5, note: 'D#' }, { fret: 18, string: 5, note: 'D#' },
+        // String 4
+        { fret: 1, string: 4, note: 'D#' }, { fret: 13, string: 4, note: 'D#' },
+        // String 3
+        { fret: 8, string: 3, note: 'D#' }, { fret: 20, string: 3, note: 'D#' },
+        // String 2
+        { fret: 4, string: 2, note: 'D#' }, { fret: 16, string: 2, note: 'D#' },
+        // String 1
+        { fret: 11, string: 1, note: 'D#' }, { fret: 23, string: 1, note: 'D#' }
+    ]
+};
 
         const flatToSharpMap = { 'DB': 'C#', 'EB': 'D#', 'GB': 'F#', 'AB': 'G#', 'BB': 'A#' };
         function normalizeForSearch(note) { return (flatToSharpMap[note?.toUpperCase()] || (note||'').toUpperCase()).replace(/\s+/g,''); }
@@ -1001,84 +1157,91 @@
             }
         }
 
-        function drawVoicing(targetSVG, voicing, providedStartFret = null, providedNumFrets = null) {
-            const isMain = targetSVG === fretboardSVG;
-            const BASE_NOTE_RADIUS = 11.11;
-            const BASE_NOTE_FONT_SIZE = BASE_NOTE_FONT_SIZE_VALUE;
+      function drawVoicing(targetSVG, voicing, providedStartFret = null, providedNumFrets = null) {
+    const isMain = targetSVG === fretboardSVG;
+    const BASE_NOTE_RADIUS = 11.11;
+    const BASE_NOTE_FONT_SIZE = BASE_NOTE_FONT_SIZE_VALUE;
 
-            // Determine dynamic window for this voicing
-            let startFret = (providedStartFret === null || providedStartFret === undefined) ? null : providedStartFret;
-            let numFretsToDisplay = (providedNumFrets === null || providedNumFrets === undefined) ? null : providedNumFrets;
+    let startFret = (providedStartFret === null || providedStartFret === undefined) ? null : providedStartFret;
+    let numFretsToDisplay = (providedNumFrets === null || providedNumFrets === undefined) ? null : providedNumFrets;
+    
+    // Use Number() to ensure fret values are numeric, and handle open strings correctly
+    const fretValues = (voicing && voicing.length > 0) ? voicing.map(n => Number(n.fret || 0)) : [];
 
-            // Normalize frets: treat negative (e.g., -1) as 0 (open)
-            const fretValues = (voicing && voicing.length > 0) ? voicing.map(n => Math.max(0, Number(n.fret || 0))) : [];
+    if (startFret === null) {
+        if (fretValues.length === 0) {
+            startFret = 0;
+            numFretsToDisplay = NUM_FRETS;
+        } else {
+            let minF = Math.min(...fretValues);
+            let maxF = Math.max(...fretValues);
+            // If the only fretted note is 0, start the window from 0
+            if (maxF === 0) minF = 0;
 
-            if (startFret === null) {
-                if (fretValues.length === 0) {
-                    // no voicing -> full neck
-                    startFret = 0;
-                    numFretsToDisplay = NUM_FRETS;
-                } else {
-                    let minF = Math.min(...fretValues);
-                    let maxF = Math.max(...fretValues);
-                    let s = Math.max(0, minF - 1);
-                    let e = Math.min(NUM_FRETS, maxF + 1);
-                    if (e - s < MIN_FRET_WINDOW) {
-                        e = Math.min(NUM_FRETS, s + MIN_FRET_WINDOW);
-                        if (e - s < MIN_FRET_WINDOW) {
-                            s = Math.max(0, e - MIN_FRET_WINDOW);
-                        }
-                    }
-                    startFret = s;
-                    numFretsToDisplay = Math.max(1, e - s);
+            let s = (minF > 0) ? Math.max(0, minF - 1) : 0;
+            let e = Math.min(NUM_FRETS, maxF + 1);
+            if (e - s < MIN_FRET_WINDOW) {
+                e = Math.min(NUM_FRETS, s + MIN_FRET_WINDOW);
+                if (e - s < MIN_FRET_WINDOW) {
+                    s = Math.max(0, e - MIN_FRET_WINDOW);
                 }
-            } else {
-                if (!numFretsToDisplay) numFretsToDisplay = isMain ? NUM_FRETS : MOBILE_VISIBLE_FRETS;
             }
-
-            // Mobile / small-screen adjustments: ensure at least MOBILE_VISIBLE_FRETS for readability
-            if (!isMain || (isMain && window.innerWidth <= 768)) {
-                if (numFretsToDisplay < MOBILE_VISIBLE_FRETS) numFretsToDisplay = MOBILE_VISIBLE_FRETS;
-                if (fretValues.length > 0) {
-                    const minF = Math.min(...fretValues);
-                    if (startFret === 0 && minF > 1) startFret = Math.max(0, minF - 1);
-                }
-                if (startFret + numFretsToDisplay > NUM_FRETS) startFret = Math.max(0, NUM_FRETS - numFretsToDisplay);
-            } else {
-                if (startFret + numFretsToDisplay > NUM_FRETS) numFretsToDisplay = Math.max(1, NUM_FRETS - startFret);
-            }
-
-            // Draw fretboard using fixed fret width calculation (adaptive for mini svgs)
-            // Provide slightly larger font for main and compact for minis
-            const noteRadius = BASE_NOTE_RADIUS;
-            const noteFontSize = isMain ? BASE_NOTE_FONT_SIZE * 0.8 : BASE_NOTE_FONT_SIZE * 0.65;
-            const fretFontSize = isMain ? BASE_NOTE_FONT_SIZE * 0.85 : BASE_NOTE_FONT_SIZE * 0.6;
-            drawFretboard(targetSVG, startFret, numFretsToDisplay, noteRadius, noteFontSize, fretFontSize, isMain ? 1.5 : 2.0);
-
-            // Now position note markers relative to the same fixed sizing
-            const viewBoxString = targetSVG.getAttribute('viewBox') || `0 0 ${targetSVG.clientWidth || 1000} ${targetSVG.clientHeight || DEFAULT_SVG_HEIGHT}`;
-            const [, , viewBoxWidth, viewBoxHeight] = viewBoxString.split(' ').map(Number);
-            const FRETBOARD_WIDTH = (numFretsToDisplay * OPTIMAL_FRET_WIDTH); // approximate; actual position uses computation below
-            const FRETBOARD_START_X = SVG_HORIZONTAL_PADDING / 2;
-            const FRETBOARD_START_Y = 20;
-            const FRETBOARD_HEIGHT = Math.max(60, viewBoxHeight - 40);
-            // Recompute effective fret width from viewBox (keeps layout consistent)
-            const effectiveFretWidth = (viewBoxWidth - SVG_HORIZONTAL_PADDING) / Math.max(1, numFretsToDisplay);
-            const STRING_HEIGHT = FRETBOARD_HEIGHT / (NUM_STRINGS - 1);
-
-            voicing.forEach(notePos=>{
-                const string = notePos.string; const fret = Math.max(0, Number(notePos.fret || 0));
-                const noteName = notePos.originalNote || notePos.note;
-                if (fret >= startFret && fret < startFret + numFretsToDisplay) {
-                    const x = FRETBOARD_START_X + (fret - startFret) * effectiveFretWidth + effectiveFretWidth / 2;
-                    const y = FRETBOARD_START_Y + (string - 1) * STRING_HEIGHT;
-                    const r = isMain ? BASE_NOTE_RADIUS : Math.max(7, BASE_NOTE_RADIUS * 0.7);
-                    const nf = isMain ? BASE_NOTE_FONT_SIZE * 0.8 : BASE_NOTE_FONT_SIZE * 0.58;
-                    targetSVG.innerHTML += `<circle cx="${x}" cy="${y}" r="${r}" fill="#f8fafc" stroke="rgba(0,0,0,0.06)" stroke-width="1.2" class="note-circle" />`;
-                    targetSVG.innerHTML += `<text x="${x}" y="${y}" text-anchor="middle" alignment-baseline="central" font-size="${nf}" fill="#0b1220" class="note-text" font-weight="700">${noteName}</text>`;
-                }
-            });
+            startFret = s;
+            numFretsToDisplay = Math.max(1, e - s);
         }
+    } else {
+        if (!numFretsToDisplay) numFreetsToDisplay = isMain ? NUM_FRETS : MOBILE_VISIBLE_FRETS;
+    }
+
+    if (!isMain || (isMain && window.innerWidth <= 768)) {
+        if (numFretsToDisplay < MOBILE_VISIBLE_FRETS) numFretsToDisplay = MOBILE_VISIBLE_FRETS;
+        if (fretValues.length > 0) {
+            const minF = Math.min(...fretValues);
+            if (startFret === 0 && minF > 1) startFret = Math.max(0, minF - 1);
+        }
+        if (startFret + numFretsToDisplay > NUM_FRETS) startFret = Math.max(0, NUM_FRETS - numFretsToDisplay);
+    } else {
+        if (startFret + numFretsToDisplay > NUM_FRETS) numFretsToDisplay = Math.max(1, NUM_FRETS - startFret);
+    }
+    
+    const noteRadius = BASE_NOTE_RADIUS;
+    const noteFontSize = isMain ? BASE_NOTE_FONT_SIZE * 0.8 : BASE_NOTE_FONT_SIZE * 0.65;
+    const fretFontSize = isMain ? BASE_NOTE_FONT_SIZE * 0.85 : BASE_NOTE_FONT_SIZE * 0.6;
+    drawFretboard(targetSVG, startFret, numFretsToDisplay, noteRadius, noteFontSize, fretFontSize, isMain ? 1.5 : 2.0);
+
+    const viewBoxString = targetSVG.getAttribute('viewBox') || `0 0 ${targetSVG.clientWidth || 1000} ${targetSVG.clientHeight || DEFAULT_SVG_HEIGHT}`;
+    const [, , viewBoxWidth, viewBoxHeight] = viewBoxString.split(' ').map(Number);
+    const FRETBOARD_START_X = SVG_HORIZONTAL_PADDING / 2;
+    const FRETBOARD_START_Y = 20;
+    const FRETBOARD_HEIGHT = Math.max(60, viewBoxHeight - 40);
+    const effectiveFretWidth = (viewBoxWidth - SVG_HORIZONTAL_PADDING) / Math.max(1, numFretsToDisplay);
+    const STRING_HEIGHT = FRETBOARD_HEIGHT / (NUM_STRINGS - 1);
+
+    voicing.forEach(notePos => {
+        const string = notePos.string;
+        const fret = Number(notePos.fret || 0); // Ensure fret is a number
+        const noteName = notePos.originalNote || notePos.note;
+        
+        // Check if the note should be drawn in the current view
+        if ((fret >= startFret && fret < startFret + numFretsToDisplay) || (fret === 0 && startFret > 0)) {
+            let x;
+            if (fret === 0) {
+              // If open string, draw circle left of the nut
+         x = FRETBOARD_START_X - (effectiveFretWidth / 3);
+         } else {
+          // Corrected: Subtract 1 from the fret value to align with the visual frets
+         x = FRETBOARD_START_X + (fret - startFret - 1) * effectiveFretWidth + effectiveFretWidth / 2;
+    }
+
+            // THIS IS THE ORIGINAL Y CALCULATION, WHICH WE ASSUME IS CORRECT FOR YOUR GRAPHICS
+            const y = FRETBOARD_START_Y + (string - 1) * STRING_HEIGHT; 
+            const r = isMain ? BASE_NOTE_RADIUS : Math.max(7, BASE_NOTE_RADIUS * 0.7);
+            const nf = isMain ? BASE_NOTE_FONT_SIZE * 0.8 : BASE_NOTE_FONT_SIZE * 0.58;
+            targetSVG.innerHTML += `<circle cx="${x}" cy="${y}" r="${r}" fill="#f8fafc" stroke="rgba(0,0,0,0.06)" stroke-width="1.2" class="note-circle" />`;
+            targetSVG.innerHTML += `<text x="${x}" y="${y}" text-anchor="middle" alignment-baseline="central" font-size="${nf}" fill="#0b1220" class="note-text" font-weight="700">${noteName}</text>`;
+        }
+    });
+}
 
         // --- Voicing info utilities ---
         function formatPcNames(pcs){
@@ -1161,7 +1324,7 @@ function displayCurrentVoicing() {
             const osc = audioContext.createOscillator();
             const gain = audioContext.createGain();
             const filter = audioContext.createBiquadFilter();
-            const frequency = stringFrequencies[string] * Math.pow(2, fret/12);
+            const frequency = stringFrequencies[string] * Math.pow(2, (Number(fret) + 0) / 12);
             osc.type='sine'; osc.frequency.value = frequency;
             filter.type='lowpass'; filter.frequency.value=2500; filter.Q.value=1;
             const now = audioContext.currentTime; const attack=0.04, decay=0.5, sustain=0.25, release=0.6;
